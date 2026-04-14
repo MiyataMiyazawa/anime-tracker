@@ -4,7 +4,7 @@
   "description": "アニメ視聴記録・管理アプリ",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f0d1a",
+  "background_color": "#f8f8fa",
   "theme_color": "#7c3aed",
   "orientation": "portrait",
   "icons": [
