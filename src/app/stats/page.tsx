@@ -2,6 +2,7 @@
 
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
+import MonthlyChart from "@/components/MonthlyChart";
 
 export default function StatsPage() {
   const allAnime = useLiveQuery(() => db.anime.toArray());
@@ -30,19 +31,34 @@ export default function StatsPage() {
         ).toFixed(1)
       : "-";
 
-  // Monthly breakdown
-  const monthlyMap = new Map<string, { count: number; episodes: number; minutes: number }>();
+  // Monthly breakdown for chart
+  const monthlyMap = new Map<
+    string,
+    { count: number; episodes: number; minutes: number }
+  >();
   for (const a of allAnime) {
     const key = `${a.year}-${String(a.month).padStart(2, "0")}`;
-    const current = monthlyMap.get(key) ?? { count: 0, episodes: 0, minutes: 0 };
+    const current = monthlyMap.get(key) ?? {
+      count: 0,
+      episodes: 0,
+      minutes: 0,
+    };
     current.count++;
     current.episodes += a.watchedEpisodes;
     current.minutes += a.watchedEpisodes * a.episodeDuration;
     monthlyMap.set(key, current);
   }
-  const monthlySorted = [...monthlyMap.entries()].sort((a, b) =>
-    b[0].localeCompare(a[0])
-  );
+  const chartData = [...monthlyMap.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([key, data]) => {
+      const [y, m] = key.split("-");
+      return {
+        label: `${y.slice(2)}/${m}`,
+        episodes: data.episodes,
+        hours: Math.round((data.minutes / 60) * 10) / 10,
+        count: data.count,
+      };
+    });
 
   const statCard = (label: string, value: string | number) => (
     <div className="bg-card rounded-xl p-4 border border-border text-center">
@@ -75,35 +91,8 @@ export default function StatsPage() {
             {statCard("平均評価", avgRating)}
           </div>
 
-          {/* Monthly breakdown */}
-          <div>
-            <h2 className="text-sm font-bold mb-3 text-muted">月別サマリー</h2>
-            <div className="space-y-2">
-              {monthlySorted.map(([key, data]) => {
-                const [y, m] = key.split("-");
-                const hours = Math.floor(data.minutes / 60);
-                const mins = data.minutes % 60;
-                return (
-                  <div
-                    key={key}
-                    className="flex items-center justify-between bg-card rounded-lg px-4 py-3 border border-border"
-                  >
-                    <span className="text-sm font-medium">
-                      {y}年{Number(m)}月
-                    </span>
-                    <div className="flex gap-4 text-xs text-muted">
-                      <span>{data.count}作品</span>
-                      <span>{data.episodes}話</span>
-                      <span>
-                        {hours > 0 ? `${hours}h` : ""}
-                        {mins > 0 ? `${mins}m` : hours > 0 ? "" : "0m"}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          {/* Monthly charts */}
+          {chartData.length > 0 && <MonthlyChart data={chartData} />}
         </>
       )}
     </div>
