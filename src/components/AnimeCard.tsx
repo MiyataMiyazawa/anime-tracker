@@ -32,11 +32,22 @@ export default function AnimeCard({ anime }: { anime: Anime }) {
   const watchedMinutes = anime.watchedEpisodes * anime.episodeDuration;
   const hours = Math.floor(watchedMinutes / 60);
   const mins = watchedMinutes % 60;
+  const progress =
+    anime.totalEpisodes > 0
+      ? Math.round((anime.watchedEpisodes / anime.totalEpisodes) * 100)
+      : 0;
+  const isWatching = anime.status === "watching";
 
   return (
     <Link href={`/anime/${anime.id}`}>
-      <div className="flex gap-3 bg-card rounded-xl p-3 border border-border hover:border-accent/50 transition-colors">
-        <div className="w-16 h-22 rounded-lg bg-border flex-shrink-0 overflow-hidden flex items-center justify-center">
+      <div
+        className={`flex gap-3 bg-card rounded-xl p-3 border transition-colors ${
+          isWatching
+            ? "border-accent/60 shadow-[0_0_8px_rgba(124,58,237,0.15)]"
+            : "border-border hover:border-accent/50"
+        }`}
+      >
+        <div className="w-16 h-22 rounded-lg bg-border flex-shrink-0 overflow-hidden flex items-center justify-center relative">
           {imageUrl ? (
             <img
               src={imageUrl}
@@ -48,6 +59,11 @@ export default function AnimeCard({ anime }: { anime: Anime }) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
             </svg>
           )}
+          {isWatching && (
+            <div className="absolute top-0 left-0 w-full bg-accent/90 text-white text-[8px] text-center py-0.5 font-bold">
+              NOW
+            </div>
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
@@ -58,18 +74,39 @@ export default function AnimeCard({ anime }: { anime: Anime }) {
               {statusLabel[anime.status]}
             </span>
           </div>
-          <p className="text-muted text-xs mt-1">
-            {anime.watchedEpisodes} / {anime.totalEpisodes} 話
-          </p>
-          <p className="text-muted text-xs">
-            {hours > 0 ? `${hours}時間${mins > 0 ? `${mins}分` : ""}` : `${mins}分`}
-          </p>
-          {anime.rating && (
-            <div className="flex items-center gap-1 mt-1">
-              <span className="text-warning text-xs">★</span>
-              <span className="text-xs text-muted">{anime.rating}/10</span>
+
+          {/* Progress bar */}
+          <div className="mt-1.5">
+            <div className="flex items-center justify-between text-[10px] text-muted mb-0.5">
+              <span>
+                {anime.watchedEpisodes} / {anime.totalEpisodes} 話
+              </span>
+              <span>{progress}%</span>
             </div>
-          )}
+            <div className="w-full h-1.5 bg-border rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${
+                  isWatching ? "bg-accent" : "bg-success"
+                }`}
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Watch time & rating */}
+          <div className="flex items-center justify-between mt-1.5">
+            <p className="text-muted text-xs">
+              {hours > 0
+                ? `${hours}時間${mins > 0 ? `${mins}分` : ""}`
+                : `${mins}分`}
+            </p>
+            {anime.rating && (
+              <div className="flex items-center gap-0.5">
+                <span className="text-warning text-xs">★</span>
+                <span className="text-xs text-muted">{anime.rating}</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </Link>
