@@ -24,4 +24,8 @@ db.version(1).stores({
   anime: "++id, title, year, month, status, [year+month]",
 });
 
+db.version(2).stores({
+  anime: "++id, &title, year, month, status, [year+month]",
+});
+
 export { db };
