@@ -44,9 +44,9 @@ export default function AddPage() {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-xl font-bold">アニメを追加</h1>
+      <h1 className="text-2xl font-black brand-text">アニメを追加</h1>
       {error && (
-        <div className="bg-danger/10 border border-danger/30 text-danger text-sm px-4 py-3 rounded-xl">
+        <div className="bg-danger/10 border border-danger/30 text-danger text-sm px-4 py-3 rounded-2xl">
           {error}
         </div>
       )}

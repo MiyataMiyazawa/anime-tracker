@@ -13,7 +13,7 @@ export default function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
+    <nav className="fixed bottom-0 left-0 right-0 bg-card/90 backdrop-blur-md border-t border-border z-50">
       <div className="flex justify-around items-center h-16 max-w-lg mx-auto">
         {navItems.map((item) => {
           const isActive =
@@ -23,12 +23,20 @@ export default function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center gap-1 px-4 py-2 transition-colors ${
+              className={`flex flex-col items-center gap-0.5 px-4 py-2 transition-all active:scale-90 ${
                 isActive ? "text-accent" : "text-muted"
               }`}
             >
-              <item.icon />
-              <span className="text-xs">{item.label}</span>
+              <span
+                className={`flex items-center justify-center w-10 h-10 rounded-2xl transition-all ${
+                  isActive ? "bg-gradient-accent" : ""
+                }`}
+              >
+                <item.icon />
+              </span>
+              <span className={`text-[10px] font-medium ${isActive ? "font-bold" : ""}`}>
+                {item.label}
+              </span>
             </Link>
           );
         })}
