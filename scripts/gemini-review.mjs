@@ -62,23 +62,39 @@ ${diff}
 （その他コメント）
 `;
 
-const geminiRes = await fetch(
-  `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-  {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { maxOutputTokens: 1024 },
-    }),
-  }
-);
+// 一時的な 429/503 はリトライ（指数バックオフ、最大5回）
+async function callGeminiWithRetry() {
+  const maxAttempts = 5;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 1024 },
+        }),
+      }
+    );
 
-if (!geminiRes.ok) {
-  console.error("Gemini API エラー:", await geminiRes.text());
-  process.exit(1);
+    if (res.ok) return res;
+
+    const body = await res.text();
+    const retriable = res.status === 429 || res.status === 503;
+    console.error(`Gemini API エラー (attempt ${attempt}/${maxAttempts}, status ${res.status}):`, body);
+
+    if (!retriable || attempt === maxAttempts) {
+      throw new Error(`Gemini API failed after ${attempt} attempts: ${res.status}`);
+    }
+
+    const waitSec = Math.min(60, 2 ** attempt * 5); // 10s, 20s, 40s, 60s, 60s
+    console.log(`${waitSec}秒待機してリトライします...`);
+    await new Promise((r) => setTimeout(r, waitSec * 1000));
+  }
 }
 
+const geminiRes = await callGeminiWithRetry();
 const geminiData = await geminiRes.json();
 const review = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
 
