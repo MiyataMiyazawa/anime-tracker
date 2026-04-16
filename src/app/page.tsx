@@ -61,14 +61,10 @@ export default function HomePage() {
       : null;
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center gap-2">
-        <span className="inline-flex items-center justify-center w-9 h-9 rounded-2xl bg-gradient-brand shadow-pop-accent">
-          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="white" strokeWidth={2.2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
-          </svg>
-        </span>
-        <h1 className="text-2xl font-black tracking-tight brand-text">
+    <div className="space-y-6">
+      <div className="pt-1">
+        <p className="label-eyebrow">your library</p>
+        <h1 className="text-3xl font-black tracking-tight brand-text mt-1">
           Anime Tracker
         </h1>
       </div>
@@ -95,7 +91,7 @@ export default function HomePage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="タイトル検索"
-          className="w-full bg-card border border-border rounded-2xl pl-9 pr-9 py-2.5 text-sm focus:outline-none focus:border-accent focus:shadow-pop-accent transition-all"
+          className="w-full bg-card border border-border rounded-xl pl-9 pr-9 py-2.5 text-sm shadow-card focus:outline-none focus:border-accent focus:shadow-card-hover transition-all"
         />
         {search && (
           <button
@@ -139,10 +135,10 @@ export default function HomePage() {
               <button
                 key={t}
                 onClick={() => setTagFilter(active ? null : t)}
-                className={`text-xs px-2.5 py-1 rounded-full border font-medium transition-all active:scale-95 ${
+                className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-all active:scale-95 ${
                   active
-                    ? "border-transparent bg-gradient-brand text-white shadow-pop-pink"
-                    : "border-border bg-card text-muted hover:border-accent/50 hover:text-foreground"
+                    ? "border-accent bg-accent text-white"
+                    : "border-border bg-card text-muted-dark hover:border-accent/50 hover:text-foreground"
                 }`}
               >
                 #{t}
@@ -164,25 +160,29 @@ export default function HomePage() {
         />
       )}
 
-      {/* Month summary (hidden while filtering) */}
+      {/* Month summary (hidden while filtering) — hero card + 2 neutrals */}
       {monthStats && monthStats.count > 0 && (
-        <div className="grid grid-cols-3 gap-2">
-          <div className="bg-gradient-accent rounded-2xl p-3 text-center border border-accent/20 shadow-pop-accent">
-            <p className="text-2xl font-black text-accent">{monthStats.count}</p>
-            <p className="text-[10px] text-muted font-medium mt-0.5">作品</p>
+        <div className="grid grid-cols-3 gap-2.5">
+          <div className="bg-hero shadow-hero rounded-2xl p-4 relative overflow-hidden">
+            <p className="label-eyebrow text-white/70">作品</p>
+            <p className="text-4xl font-black text-white tabular-nums tracking-tight mt-1 leading-none">
+              {monthStats.count}
+            </p>
           </div>
-          <div className="bg-gradient-pink rounded-2xl p-3 text-center border border-pink/20 shadow-pop-pink">
-            <p className="text-2xl font-black text-pink">
+          <div className="bg-card border border-border rounded-2xl p-4 shadow-card">
+            <p className="label-eyebrow">話数</p>
+            <p className="text-4xl font-black text-foreground tabular-nums tracking-tight mt-1 leading-none">
               {monthStats.totalEpisodes}
             </p>
-            <p className="text-[10px] text-muted font-medium mt-0.5">話</p>
           </div>
-          <div className="bg-gradient-amber rounded-2xl p-3 text-center border border-amber/20 shadow-pop-amber">
-            <p className="text-2xl font-black text-amber">
-              {Math.floor(monthStats.totalMinutes / 60)}h
-              {monthStats.totalMinutes % 60}m
+          <div className="bg-card border border-border rounded-2xl p-4 shadow-card">
+            <p className="label-eyebrow">時間</p>
+            <p className="text-4xl font-black text-foreground tabular-nums tracking-tight mt-1 leading-none">
+              {Math.floor(monthStats.totalMinutes / 60)}
+              <span className="text-lg font-bold text-muted-dark ml-0.5">h</span>
+              <span className="text-2xl">{monthStats.totalMinutes % 60}</span>
+              <span className="text-lg font-bold text-muted-dark ml-0.5">m</span>
             </p>
-            <p className="text-[10px] text-muted font-medium mt-0.5">視聴時間</p>
           </div>
         </div>
       )}

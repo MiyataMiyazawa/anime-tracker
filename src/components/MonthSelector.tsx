@@ -29,25 +29,25 @@ export default function MonthSelector({ year, month, onChange }: MonthSelectorPr
   };
 
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between bg-card border border-border rounded-2xl px-2 py-1.5 shadow-card">
       <button
         onClick={prev}
         aria-label="前の月"
-        className="flex items-center justify-center w-10 h-10 rounded-2xl bg-card border border-border text-muted hover:text-accent hover:border-accent hover:shadow-pop-accent active:scale-90 transition-all"
+        className="flex items-center justify-center w-9 h-9 rounded-xl text-muted-dark hover:text-accent hover:bg-card-hover active:scale-90 transition-all"
       >
-        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
       </button>
-      <h2 className="text-lg font-black brand-text">
+      <h2 className="text-base font-bold tracking-tight tabular-nums">
         {year}年 {monthNames[month - 1]}
       </h2>
       <button
         onClick={next}
         aria-label="次の月"
-        className="flex items-center justify-center w-10 h-10 rounded-2xl bg-card border border-border text-muted hover:text-accent hover:border-accent hover:shadow-pop-accent active:scale-90 transition-all"
+        className="flex items-center justify-center w-9 h-9 rounded-xl text-muted-dark hover:text-accent hover:bg-card-hover active:scale-90 transition-all"
       >
-        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
         </svg>
       </button>
