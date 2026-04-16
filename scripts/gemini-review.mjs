@@ -63,7 +63,7 @@ ${diff}
 `;
 
 const geminiRes = await fetch(
-  `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+  `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
   {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -93,7 +93,7 @@ const commentBody = `## 🤖 Gemini AIコードレビュー
 ${review}
 
 ---
-*Powered by Gemini 2.0 Flash*`;
+*Powered by Gemini 2.5 Flash*`;
 
 const ghRes = await fetch(
   `https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments`,
