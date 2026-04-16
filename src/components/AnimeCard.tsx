@@ -12,10 +12,10 @@ const statusLabel: Record<Anime["status"], string> = {
 };
 
 const statusColor: Record<Anime["status"], string> = {
-  watching: "bg-accent",
+  watching: "bg-gradient-brand",
   completed: "bg-success",
   dropped: "bg-danger",
-  planned: "bg-warning",
+  planned: "bg-amber",
 };
 
 export default function AnimeCard({
@@ -47,13 +47,13 @@ export default function AnimeCard({
   return (
     <Link href={`/anime/${anime.id}`}>
       <div
-        className={`flex gap-3 bg-card rounded-xl p-3 border transition-colors ${
+        className={`flex gap-3 bg-card rounded-2xl p-3 border transition-all active:scale-[0.98] ${
           isWatching
-            ? "border-accent/60 shadow-[0_0_8px_rgba(124,58,237,0.15)]"
-            : "border-border hover:border-accent/50"
+            ? "border-accent/50 shadow-pop-accent hover:shadow-pop-pink"
+            : "border-border hover:border-accent/50 hover:shadow-pop-accent"
         }`}
       >
-        <div className="w-16 h-22 rounded-lg bg-border flex-shrink-0 overflow-hidden flex items-center justify-center relative">
+        <div className="w-16 h-22 rounded-xl bg-border flex-shrink-0 overflow-hidden flex items-center justify-center relative">
           {imageUrl ? (
             <img
               src={imageUrl}
@@ -66,16 +66,16 @@ export default function AnimeCard({
             </svg>
           )}
           {isWatching && (
-            <div className="absolute top-0 left-0 w-full bg-accent/90 text-white text-[8px] text-center py-0.5 font-bold">
+            <div className="absolute top-0 left-0 w-full bg-gradient-brand text-white text-[8px] text-center py-0.5 font-bold tracking-wider">
               NOW
             </div>
           )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-medium text-sm truncate">{anime.title}</h3>
+            <h3 className="font-bold text-sm truncate">{anime.title}</h3>
             <span
-              className={`${statusColor[anime.status]} text-white text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0`}
+              className={`${statusColor[anime.status]} text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0`}
             >
               {statusLabel[anime.status]}
             </span>
@@ -94,10 +94,10 @@ export default function AnimeCard({
               </span>
               <span>{progress}%</span>
             </div>
-            <div className="w-full h-1.5 bg-border rounded-full overflow-hidden">
+            <div className="w-full h-2 bg-border rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all ${
-                  isWatching ? "bg-accent" : "bg-success"
+                  isWatching ? "bg-gradient-brand" : "bg-success"
                 }`}
                 style={{ width: `${progress}%` }}
               />
@@ -125,7 +125,7 @@ export default function AnimeCard({
               {anime.tags.slice(0, 3).map((t) => (
                 <span
                   key={t}
-                  className="text-[10px] px-1.5 py-0.5 rounded-full bg-accent/10 text-accent-light border border-accent/20"
+                  className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-gradient-accent text-accent-dark border border-accent/20"
                 >
                   #{t}
                 </span>

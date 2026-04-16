@@ -60,16 +60,28 @@ export default function StatsPage() {
       };
     });
 
-  const statCard = (label: string, value: string | number) => (
-    <div className="bg-card rounded-xl p-4 border border-border text-center">
-      <p className="text-2xl font-bold text-accent">{value}</p>
-      <p className="text-xs text-muted mt-1">{label}</p>
-    </div>
-  );
+  type Theme = "accent" | "pink" | "amber" | "mint" | "success";
+  const themeMap: Record<Theme, { bg: string; border: string; text: string; shadow: string }> = {
+    accent: { bg: "bg-gradient-accent", border: "border-accent/20", text: "text-accent", shadow: "shadow-pop-accent" },
+    pink: { bg: "bg-gradient-pink", border: "border-pink/20", text: "text-pink", shadow: "shadow-pop-pink" },
+    amber: { bg: "bg-gradient-amber", border: "border-amber/20", text: "text-amber", shadow: "shadow-pop-amber" },
+    mint: { bg: "bg-gradient-mint", border: "border-mint/20", text: "text-mint", shadow: "shadow-pop-mint" },
+    success: { bg: "bg-gradient-mint", border: "border-success/20", text: "text-success", shadow: "shadow-pop-mint" },
+  };
+
+  const statCard = (label: string, value: string | number, theme: Theme) => {
+    const t = themeMap[theme];
+    return (
+      <div className={`${t.bg} rounded-2xl p-4 border ${t.border} ${t.shadow} text-center`}>
+        <p className={`text-3xl font-black ${t.text}`}>{value}</p>
+        <p className="text-xs text-muted font-medium mt-1">{label}</p>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-bold">統計</h1>
+      <h1 className="text-2xl font-black brand-text">統計</h1>
 
       {allAnime.length === 0 ? (
         <div className="text-center text-muted py-12">
@@ -80,15 +92,16 @@ export default function StatsPage() {
         <>
           {/* Overall stats */}
           <div className="grid grid-cols-2 gap-3">
-            {statCard("完了作品", totalWatched)}
-            {statCard("視聴中", totalWatching)}
-            {statCard("総視聴話数", totalEpisodes)}
+            {statCard("完了作品", totalWatched, "success")}
+            {statCard("視聴中", totalWatching, "accent")}
+            {statCard("総視聴話数", totalEpisodes, "pink")}
             {statCard(
               "総視聴時間",
-              `${totalHours}h${remainingMins > 0 ? `${remainingMins}m` : ""}`
+              `${totalHours}h${remainingMins > 0 ? `${remainingMins}m` : ""}`,
+              "amber"
             )}
-            {statCard("登録作品数", allAnime.length)}
-            {statCard("平均評価", avgRating)}
+            {statCard("登録作品数", allAnime.length, "mint")}
+            {statCard("平均評価", avgRating, "amber")}
           </div>
 
           {/* Monthly charts */}

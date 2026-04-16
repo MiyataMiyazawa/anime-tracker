@@ -72,9 +72,9 @@ export default function EpisodeList({ animeId }: { animeId: number }) {
                       ? `${ep.number}話を未視聴にする`
                       : `${ep.number}話を視聴済みにする`
                   }
-                  className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                  className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all active:scale-90 ${
                     isWatched
-                      ? "bg-accent border-accent"
+                      ? "bg-gradient-brand border-transparent shadow-pop-accent"
                       : "bg-card border-border hover:border-accent/60"
                   }`}
                 >

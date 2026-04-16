@@ -142,15 +142,15 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
   };
 
   const inputClass =
-    "w-full bg-card border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-accent transition-colors";
-  const labelClass = "block text-xs text-muted mb-1";
+    "w-full bg-card border border-border rounded-2xl px-3 py-2.5 text-sm focus:outline-none focus:border-accent focus:shadow-pop-accent transition-all";
+  const labelClass = "block text-xs text-muted font-medium mb-1";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Image */}
       <div
         onClick={() => fileInputRef.current?.click()}
-        className="w-full h-40 bg-card border border-border border-dashed rounded-xl flex items-center justify-center cursor-pointer hover:border-accent/50 transition-colors overflow-hidden"
+        className="w-full h-40 bg-gradient-accent border-2 border-accent/20 border-dashed rounded-2xl flex items-center justify-center cursor-pointer hover:border-accent/50 hover:shadow-pop-accent transition-all overflow-hidden"
       >
         {imagePreview ? (
           <img src={imagePreview} alt="preview" className="w-full h-full object-cover" />
@@ -262,15 +262,22 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
       <div>
         <label className={labelClass}>ステータス</label>
         <div className="grid grid-cols-4 gap-2">
-          {(["watching", "completed", "dropped", "planned"] as const).map((s) => (
+          {(
+            [
+              { s: "watching", active: "border-transparent bg-gradient-brand text-white shadow-pop-accent" },
+              { s: "completed", active: "border-transparent bg-success text-white shadow-pop-mint" },
+              { s: "dropped", active: "border-transparent bg-danger text-white" },
+              { s: "planned", active: "border-transparent bg-amber text-white shadow-pop-amber" },
+            ] as const
+          ).map(({ s, active }) => (
             <button
               key={s}
               type="button"
               onClick={() => setStatus(s)}
-              className={`text-xs py-2 rounded-lg border transition-colors ${
+              className={`text-xs font-bold py-2 rounded-2xl border transition-all active:scale-95 ${
                 status === s
-                  ? "border-accent bg-accent/20 text-accent-light"
-                  : "border-border text-muted hover:border-accent/30"
+                  ? active
+                  : "border-border bg-card text-muted hover:border-accent/40"
               }`}
             >
               {{ watching: "視聴中", completed: "完了", dropped: "中断", planned: "予定" }[s]}
@@ -315,7 +322,7 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
             {tags.map((t) => (
               <span
                 key={t}
-                className="inline-flex items-center gap-1 bg-accent/10 text-accent-light text-xs px-2 py-1 rounded-full border border-accent/30"
+                className="inline-flex items-center gap-1 bg-gradient-accent text-accent-dark text-xs font-medium px-2.5 py-1 rounded-full border border-accent/30"
               >
                 #{t}
                 <button
@@ -357,7 +364,7 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
                   key={t}
                   type="button"
                   onClick={() => addTag(t)}
-                  className="text-xs px-2 py-0.5 rounded-full border border-border text-muted hover:border-accent hover:text-accent transition-colors"
+                  className="text-xs font-medium px-2.5 py-0.5 rounded-full border border-border bg-card text-muted hover:border-accent hover:text-accent active:scale-95 transition-all"
                 >
                   #{t}
                 </button>
@@ -370,7 +377,7 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
       {/* Submit */}
       <button
         type="submit"
-        className="w-full bg-accent hover:bg-accent/90 text-white font-medium py-3 rounded-xl transition-colors"
+        className="w-full bg-gradient-brand text-white font-bold py-3 rounded-2xl shadow-pop-pink hover:shadow-pop-accent active:scale-[0.98] transition-all"
       >
         {initial ? "更新する" : "追加する"}
       </button>
@@ -380,7 +387,7 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
         <button
           type="button"
           onClick={onDelete}
-          className="w-full border border-danger text-danger hover:bg-danger/10 font-medium py-3 rounded-xl transition-colors"
+          className="w-full border border-danger text-danger hover:bg-danger/10 font-bold py-3 rounded-2xl active:scale-[0.98] transition-all"
         >
           削除する
         </button>

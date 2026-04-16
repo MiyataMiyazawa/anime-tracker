@@ -58,7 +58,7 @@ export default function AnimeDetailPage({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-bold">アニメを編集</h1>
+      <h1 className="text-2xl font-black brand-text">アニメを編集</h1>
       <AnimeForm
         initial={anime}
         onSubmit={handleSubmit}
