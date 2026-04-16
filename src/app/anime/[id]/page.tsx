@@ -2,8 +2,13 @@
 
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { db } from "@/lib/db";
+import {
+  db,
+  syncEpisodes,
+  deleteAnimeWithEpisodes,
+} from "@/lib/db";
 import AnimeForm from "@/components/AnimeForm";
+import EpisodeList from "@/components/EpisodeList";
 import type { Anime } from "@/lib/db";
 
 export default function AnimeDetailPage({
@@ -26,16 +31,19 @@ export default function AnimeDetailPage({
   const handleSubmit = async (
     data: Omit<Anime, "id" | "createdAt" | "updatedAt">
   ) => {
-    await db.anime.update(Number(id), {
+    const animeId = Number(id);
+    await db.anime.update(animeId, {
       ...data,
       updatedAt: new Date(),
     });
+    // totalEpisodes が変わっていたら episodes を同期
+    await syncEpisodes(animeId, data.totalEpisodes);
     router.push("/");
   };
 
   const handleDelete = async () => {
-    if (confirm("このアニメを削除しますか？")) {
-      await db.anime.delete(Number(id));
+    if (confirm("このアニメを削除しますか？（エピソード記録も全て消えます）")) {
+      await deleteAnimeWithEpisodes(Number(id));
       router.push("/");
     }
   };
@@ -49,13 +57,16 @@ export default function AnimeDetailPage({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <h1 className="text-xl font-bold">アニメを編集</h1>
       <AnimeForm
         initial={anime}
         onSubmit={handleSubmit}
         onDelete={handleDelete}
       />
+      <div className="pt-2 border-t border-border">
+        <EpisodeList animeId={anime.id} />
+      </div>
     </div>
   );
 }
