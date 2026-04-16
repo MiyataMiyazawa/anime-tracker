@@ -11,24 +11,45 @@ export default function HomePage() {
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [search, setSearch] = useState("");
+  const [tagFilter, setTagFilter] = useState<string | null>(null);
 
   const query = search.trim().toLowerCase();
   const isSearching = query.length > 0;
+  const isFiltering = isSearching || tagFilter !== null;
+
+  // 全タグ一覧（頻度順）
+  const allTags = useLiveQuery(async () => {
+    const all = await db.anime.toArray();
+    const freq = new Map<string, number>();
+    for (const a of all) {
+      for (const t of a.tags ?? []) {
+        freq.set(t, (freq.get(t) ?? 0) + 1);
+      }
+    }
+    return [...freq.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([t]) => t);
+  }, []);
 
   const animeList = useLiveQuery(async () => {
-    if (isSearching) {
-      const all = await db.anime
-        .filter((a) => a.title.toLowerCase().includes(query))
-        .toArray();
-      return all.sort(
+    if (isFiltering) {
+      let collection = db.anime.toCollection();
+      if (tagFilter) {
+        collection = db.anime.where("tags").equals(tagFilter);
+      }
+      const all = await collection.toArray();
+      const filtered = isSearching
+        ? all.filter((a) => a.title.toLowerCase().includes(query))
+        : all;
+      return filtered.sort(
         (a, b) => b.year - a.year || b.month - a.month || b.id - a.id
       );
     }
     return db.anime.where({ year, month }).toArray();
-  }, [year, month, isSearching, query]);
+  }, [year, month, isFiltering, isSearching, query, tagFilter]);
 
   const monthStats =
-    !isSearching && animeList
+    !isFiltering && animeList
       ? {
           count: animeList.length,
           totalEpisodes: animeList.reduce((s, a) => s + a.watchedEpisodes, 0),
@@ -92,8 +113,38 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* Month selector (hidden while searching) */}
-      {!isSearching && (
+      {/* Tag filter */}
+      {allTags && allTags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {tagFilter && (
+            <button
+              onClick={() => setTagFilter(null)}
+              className="text-xs px-2 py-1 rounded-full border border-border text-muted hover:text-foreground transition-colors"
+            >
+              ✕ 全て
+            </button>
+          )}
+          {allTags.map((t) => {
+            const active = tagFilter === t;
+            return (
+              <button
+                key={t}
+                onClick={() => setTagFilter(active ? null : t)}
+                className={`text-xs px-2 py-1 rounded-full border transition-colors ${
+                  active
+                    ? "border-accent bg-accent/20 text-accent-light"
+                    : "border-border text-muted hover:border-accent/50 hover:text-foreground"
+                }`}
+              >
+                #{t}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Month selector (hidden while filtering) */}
+      {!isFiltering && (
         <MonthSelector
           year={year}
           month={month}
@@ -104,7 +155,7 @@ export default function HomePage() {
         />
       )}
 
-      {/* Month summary (hidden while searching) */}
+      {/* Month summary (hidden while filtering) */}
       {monthStats && monthStats.count > 0 && (
         <div className="grid grid-cols-3 gap-2">
           <div className="bg-card rounded-xl p-3 text-center border border-border">
@@ -127,10 +178,11 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Search result count */}
-      {isSearching && animeList && (
+      {/* Filter result count */}
+      {isFiltering && animeList && (
         <p className="text-xs text-muted">
           {animeList.length}件ヒット
+          {tagFilter && <span className="ml-1">（#{tagFilter}）</span>}
         </p>
       )}
 
@@ -139,7 +191,7 @@ export default function HomePage() {
         <div className="text-center text-muted py-12">読み込み中...</div>
       ) : animeList.length === 0 ? (
         <div className="text-center text-muted py-12">
-          {isSearching ? (
+          {isFiltering ? (
             <p className="text-sm">該当するアニメが見つかりませんでした</p>
           ) : (
             <>
@@ -157,7 +209,7 @@ export default function HomePage() {
             <AnimeCard
               key={anime.id}
               anime={anime}
-              showDate={isSearching}
+              showDate={isFiltering}
             />
           ))}
         </div>
