@@ -13,16 +13,33 @@ interface AnimeFormProps {
   onDelete?: () => void;
 }
 
+// 数値入力で先頭ゼロ等が残らないよう正規化する（空文字は空文字のまま保持）
+const normalizeNumStr = (s: string) => {
+  if (s === "") return "";
+  // 数値として解釈できない場合（全角・ハイフンのみなど）は入力途中なのでそのまま返す
+  const n = Number(s);
+  if (!Number.isFinite(n)) return s;
+  return String(n);
+};
+
 export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProps) {
   const now = new Date();
   const [title, setTitle] = useState(initial?.title ?? "");
-  const [totalEpisodes, setTotalEpisodes] = useState(initial?.totalEpisodes ?? 12);
-  const [watchedEpisodes, setWatchedEpisodes] = useState(initial?.watchedEpisodes ?? 0);
-  const [episodeDuration, setEpisodeDuration] = useState(initial?.episodeDuration ?? 24);
-  const [year, setYear] = useState(initial?.year ?? now.getFullYear());
+  const [totalEpisodes, setTotalEpisodes] = useState(
+    String(initial?.totalEpisodes ?? 12)
+  );
+  const [watchedEpisodes, setWatchedEpisodes] = useState(
+    String(initial?.watchedEpisodes ?? 0)
+  );
+  const [episodeDuration, setEpisodeDuration] = useState(
+    String(initial?.episodeDuration ?? 24)
+  );
+  const [year, setYear] = useState(String(initial?.year ?? now.getFullYear()));
   const [month, setMonth] = useState(initial?.month ?? now.getMonth() + 1);
   const [status, setStatus] = useState<Anime["status"]>(initial?.status ?? "watching");
-  const [rating, setRating] = useState<number | "">(initial?.rating ?? "");
+  const [rating, setRating] = useState<string>(
+    initial?.rating != null ? String(initial.rating) : ""
+  );
   const [memo, setMemo] = useState(initial?.memo ?? "");
   const [tags, setTags] = useState<string[]>(initial?.tags ?? []);
   const [tagInput, setTagInput] = useState("");
@@ -106,12 +123,15 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
     e.preventDefault();
     if (!title.trim()) return;
 
+    const totalEp = Number(totalEpisodes) || 0;
+    const watchedEp = Math.min(Number(watchedEpisodes) || 0, totalEp);
+
     onSubmit({
       title: title.trim(),
-      totalEpisodes,
-      watchedEpisodes,
-      episodeDuration,
-      year,
+      totalEpisodes: totalEp,
+      watchedEpisodes: watchedEp,
+      episodeDuration: Number(episodeDuration) || 0,
+      year: Number(year) || now.getFullYear(),
       month,
       status,
       rating: rating === "" ? null : Number(rating),
@@ -170,8 +190,10 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
           <label className={labelClass}>年</label>
           <input
             type="number"
+            inputMode="numeric"
             value={year}
-            onChange={(e) => setYear(Number(e.target.value))}
+            onChange={(e) => setYear(normalizeNumStr(e.target.value))}
+            onFocus={(e) => e.target.select()}
             className={inputClass}
           />
         </div>
@@ -197,8 +219,10 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
           <label className={labelClass}>総話数</label>
           <input
             type="number"
+            inputMode="numeric"
             value={totalEpisodes}
-            onChange={(e) => setTotalEpisodes(Number(e.target.value))}
+            onChange={(e) => setTotalEpisodes(normalizeNumStr(e.target.value))}
+            onFocus={(e) => e.target.select()}
             min={0}
             className={inputClass}
           />
@@ -208,10 +232,12 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
             <label className={labelClass}>視聴済み話数</label>
             <input
               type="number"
+              inputMode="numeric"
               value={watchedEpisodes}
-              onChange={(e) => setWatchedEpisodes(Number(e.target.value))}
+              onChange={(e) => setWatchedEpisodes(normalizeNumStr(e.target.value))}
+              onFocus={(e) => e.target.select()}
               min={0}
-              max={totalEpisodes}
+              max={Number(totalEpisodes) || 0}
               className={inputClass}
             />
           </div>
@@ -223,8 +249,10 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
         <label className={labelClass}>1話あたりの時間（分）</label>
         <input
           type="number"
+          inputMode="numeric"
           value={episodeDuration}
-          onChange={(e) => setEpisodeDuration(Number(e.target.value))}
+          onChange={(e) => setEpisodeDuration(normalizeNumStr(e.target.value))}
+          onFocus={(e) => e.target.select()}
           min={1}
           className={inputClass}
         />
@@ -256,8 +284,10 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
         <label className={labelClass}>評価（1〜10）</label>
         <input
           type="number"
+          inputMode="numeric"
           value={rating}
-          onChange={(e) => setRating(e.target.value === "" ? "" : Number(e.target.value))}
+          onChange={(e) => setRating(normalizeNumStr(e.target.value))}
+          onFocus={(e) => e.target.select()}
           min={1}
           max={10}
           placeholder="未評価"
