@@ -11,6 +11,7 @@ export interface Anime {
   status: "watching" | "completed" | "dropped" | "planned";
   rating: number | null; // 1-10
   memo: string;
+  tags: string[];
   imageBlob: Blob | null;
   createdAt: Date;
   updatedAt: Date;
@@ -27,5 +28,21 @@ db.version(1).stores({
 db.version(2).stores({
   anime: "++id, &title, year, month, status, [year+month]",
 });
+
+// v3: multi-entry index on tags + backfill empty tags[] for legacy rows
+db.version(3)
+  .stores({
+    anime: "++id, &title, year, month, status, [year+month], *tags",
+  })
+  .upgrade(async (tx) => {
+    await tx
+      .table<Anime>("anime")
+      .toCollection()
+      .modify((a) => {
+        if (!Array.isArray(a.tags)) {
+          a.tags = [];
+        }
+      });
+  });
 
 export { db };

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useLiveQuery } from "dexie-react-hooks";
+import { db } from "@/lib/db";
 import type { Anime } from "@/lib/db";
 
 type AnimeFormData = Omit<Anime, "id" | "createdAt" | "updatedAt">;
@@ -22,9 +24,39 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
   const [status, setStatus] = useState<Anime["status"]>(initial?.status ?? "watching");
   const [rating, setRating] = useState<number | "">(initial?.rating ?? "");
   const [memo, setMemo] = useState(initial?.memo ?? "");
+  const [tags, setTags] = useState<string[]>(initial?.tags ?? []);
+  const [tagInput, setTagInput] = useState("");
   const [imageBlob, setImageBlob] = useState<Blob | null>(initial?.imageBlob ?? null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 既存の全タグを候補として取得（頻度順）
+  const allTags = useLiveQuery(async () => {
+    const all = await db.anime.toArray();
+    const freq = new Map<string, number>();
+    for (const a of all) {
+      for (const t of a.tags ?? []) {
+        freq.set(t, (freq.get(t) ?? 0) + 1);
+      }
+    }
+    return [...freq.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([t]) => t);
+  }, []);
+
+  const addTag = (raw: string) => {
+    const t = raw.trim();
+    if (!t) return;
+    if (tags.includes(t)) return;
+    setTags([...tags, t]);
+    setTagInput("");
+  };
+
+  const removeTag = (t: string) => {
+    setTags(tags.filter((x) => x !== t));
+  };
+
+  const suggestions = (allTags ?? []).filter((t) => !tags.includes(t)).slice(0, 8);
 
   useEffect(() => {
     if (imageBlob) {
@@ -84,6 +116,7 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
       status,
       rating: rating === "" ? null : Number(rating),
       memo,
+      tags,
       imageBlob,
     });
   };
@@ -240,6 +273,66 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
           rows={3}
           className={inputClass + " resize-none"}
         />
+      </div>
+
+      {/* Tags */}
+      <div>
+        <label className={labelClass}>タグ</label>
+        {tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {tags.map((t) => (
+              <span
+                key={t}
+                className="inline-flex items-center gap-1 bg-accent/10 text-accent-light text-xs px-2 py-1 rounded-full border border-accent/30"
+              >
+                #{t}
+                <button
+                  type="button"
+                  onClick={() => removeTag(t)}
+                  aria-label={`${t} を削除`}
+                  className="hover:text-danger"
+                >
+                  <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+        <input
+          type="text"
+          value={tagInput}
+          onChange={(e) => setTagInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === ",") {
+              e.preventDefault();
+              addTag(tagInput);
+            }
+          }}
+          onBlur={() => {
+            if (tagInput.trim()) addTag(tagInput);
+          }}
+          placeholder="タグを入力してEnter（例: SF, 2024春, おすすめ）"
+          className={inputClass}
+        />
+        {suggestions.length > 0 && (
+          <div className="mt-2">
+            <p className="text-[10px] text-muted mb-1">既存タグから追加</p>
+            <div className="flex flex-wrap gap-1.5">
+              {suggestions.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => addTag(t)}
+                  className="text-xs px-2 py-0.5 rounded-full border border-border text-muted hover:border-accent hover:text-accent transition-colors"
+                >
+                  #{t}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Submit */}
