@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { db } from "@/lib/db";
+import { db, createInitialEpisodes } from "@/lib/db";
 import AnimeForm from "@/components/AnimeForm";
 import type { Anime } from "@/lib/db";
 
@@ -26,11 +26,19 @@ export default function AddPage() {
     }
 
     const now = new Date();
-    await db.anime.add({
+    const newId = await db.anime.add({
       ...data,
       createdAt: now,
       updatedAt: now,
     } as Anime);
+
+    // 初期 episodes を生成（先頭 watchedEpisodes 個を視聴済みに）
+    await createInitialEpisodes(
+      Number(newId),
+      data.totalEpisodes,
+      data.watchedEpisodes
+    );
+
     router.push("/");
   };
 

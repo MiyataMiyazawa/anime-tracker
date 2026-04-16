@@ -192,7 +192,7 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
       </div>
 
       {/* Episodes */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className={initial ? "" : "grid grid-cols-2 gap-3"}>
         <div>
           <label className={labelClass}>総話数</label>
           <input
@@ -203,17 +203,19 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
             className={inputClass}
           />
         </div>
-        <div>
-          <label className={labelClass}>視聴済み話数</label>
-          <input
-            type="number"
-            value={watchedEpisodes}
-            onChange={(e) => setWatchedEpisodes(Number(e.target.value))}
-            min={0}
-            max={totalEpisodes}
-            className={inputClass}
-          />
-        </div>
+        {!initial && (
+          <div>
+            <label className={labelClass}>視聴済み話数</label>
+            <input
+              type="number"
+              value={watchedEpisodes}
+              onChange={(e) => setWatchedEpisodes(Number(e.target.value))}
+              min={0}
+              max={totalEpisodes}
+              className={inputClass}
+            />
+          </div>
+        )}
       </div>
 
       {/* Episode Duration */}
