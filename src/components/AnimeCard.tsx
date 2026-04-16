@@ -18,7 +18,13 @@ const statusColor: Record<Anime["status"], string> = {
   planned: "bg-warning",
 };
 
-export default function AnimeCard({ anime }: { anime: Anime }) {
+export default function AnimeCard({
+  anime,
+  showDate = false,
+}: {
+  anime: Anime;
+  showDate?: boolean;
+}) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -74,6 +80,11 @@ export default function AnimeCard({ anime }: { anime: Anime }) {
               {statusLabel[anime.status]}
             </span>
           </div>
+          {showDate && (
+            <p className="text-[10px] text-muted mt-0.5">
+              {anime.year}年{anime.month}月
+            </p>
+          )}
 
           {/* Progress bar */}
           <div className="mt-1.5">
