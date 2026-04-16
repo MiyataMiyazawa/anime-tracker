@@ -23,7 +23,7 @@ type ChartMode = "hours" | "episodes" | "count";
 const modeConfig: Record<ChartMode, { label: string; color: string; unit: string }> = {
   hours: { label: "視聴時間", color: "#7c3aed", unit: "h" },
   episodes: { label: "話数", color: "#a78bfa", unit: "話" },
-  count: { label: "作品数", color: "#22c55e", unit: "作品" },
+  count: { label: "作品数", color: "#16a34a", unit: "作品" },
 };
 
 export default function MonthlyChart({ data }: { data: ChartDataItem[] }) {
@@ -54,31 +54,31 @@ export default function MonthlyChart({ data }: { data: ChartDataItem[] }) {
       <div className="bg-card rounded-xl border border-border p-3">
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={data} margin={{ top: 5, right: 5, bottom: 5, left: -10 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#2d2a3d" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e0ec" vertical={false} />
             <XAxis
               dataKey="label"
-              tick={{ fill: "#6b6880", fontSize: 10 }}
-              axisLine={{ stroke: "#2d2a3d" }}
+              tick={{ fill: "#8b879e", fontSize: 10 }}
+              axisLine={{ stroke: "#e2e0ec" }}
               tickLine={false}
             />
             <YAxis
-              tick={{ fill: "#6b6880", fontSize: 10 }}
+              tick={{ fill: "#8b879e", fontSize: 10 }}
               axisLine={false}
               tickLine={false}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "#1a1726",
-                border: "1px solid #2d2a3d",
+                backgroundColor: "#ffffff",
+                border: "1px solid #e2e0ec",
                 borderRadius: "8px",
                 fontSize: "12px",
-                color: "#e8e6f0",
+                color: "#1a1a2e",
               }}
               formatter={(value) => [
                 `${value}${config.unit}`,
                 config.label,
               ]}
-              labelStyle={{ color: "#6b6880" }}
+              labelStyle={{ color: "#8b879e" }}
             />
             <Bar
               dataKey={mode}
