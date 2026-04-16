@@ -1,21 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  --background: #faf8ff;
-  --foreground: #1a1a2e;
+  --background: #fafaf9;
+  --foreground: #0f0f1a;
   --card: #ffffff;
-  --card-hover: #f3f2f7;
-  --border: #e8e4f3;
+  --card-hover: #f7f5fb;
+  --border: #eae7f0;
+  --border-strong: #d8d3e3;
   --accent: #7c3aed;
   --accent-light: #9d5cf2;
   --accent-dark: #6d28d9;
   --pink: #ec4899;
-  --pink-light: #f472b6;
-  --amber: #f59e0b;
-  --amber-light: #fbbf24;
-  --mint: #06b6d4;
-  --mint-light: #22d3ee;
   --muted: #8b879e;
+  --muted-dark: #6b677e;
   --success: #10b981;
   --warning: #f59e0b;
   --danger: #ef4444;
@@ -27,16 +24,13 @@
   --color-card: var(--card);
   --color-card-hover: var(--card-hover);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-accent: var(--accent);
   --color-accent-light: var(--accent-light);
   --color-accent-dark: var(--accent-dark);
   --color-pink: var(--pink);
-  --color-pink-light: var(--pink-light);
-  --color-amber: var(--amber);
-  --color-amber-light: var(--amber-light);
-  --color-mint: var(--mint);
-  --color-mint-light: var(--mint-light);
   --color-muted: var(--muted);
+  --color-muted-dark: var(--muted-dark);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
@@ -46,53 +40,79 @@
 
 body {
   background:
-    radial-gradient(ellipse 70% 40% at 10% 0%, rgba(124, 58, 237, 0.08), transparent 60%),
-    radial-gradient(ellipse 60% 40% at 100% 10%, rgba(236, 72, 153, 0.07), transparent 60%),
+    radial-gradient(ellipse 60% 30% at 20% -5%, rgba(124, 58, 237, 0.08), transparent 60%),
+    radial-gradient(ellipse 40% 25% at 95% 5%, rgba(236, 72, 153, 0.06), transparent 60%),
     var(--background);
   background-attachment: fixed;
   color: var(--foreground);
   font-family: var(--font-sans), "Hiragino Kaku Gothic ProN", "Noto Sans JP",
     sans-serif;
+  font-feature-settings: "cv11", "ss01", "ss03";
 }
 
-/* Brand gradient text (heading) */
+/* Tabular numbers for stats */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Brand gradient (used sparingly — hero heading only) */
 .brand-text {
-  background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+  background: linear-gradient(135deg, #0f0f1a 0%, #7c3aed 55%, #ec4899 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
 }
 
-/* Pop soft shadows (colored) */
-.shadow-pop-accent {
-  box-shadow: 0 4px 14px -2px rgba(124, 58, 237, 0.25);
+/* Layered shadows — modern, not cheap */
+.shadow-card {
+  box-shadow:
+    0 1px 2px rgba(15, 15, 26, 0.04),
+    0 1px 3px rgba(15, 15, 26, 0.03);
 }
-.shadow-pop-pink {
-  box-shadow: 0 4px 14px -2px rgba(236, 72, 153, 0.22);
+.shadow-card-hover {
+  box-shadow:
+    0 4px 10px -2px rgba(15, 15, 26, 0.06),
+    0 8px 24px -4px rgba(124, 58, 237, 0.12);
 }
-.shadow-pop-amber {
-  box-shadow: 0 4px 14px -2px rgba(245, 158, 11, 0.22);
+.shadow-hero {
+  box-shadow:
+    0 2px 4px rgba(124, 58, 237, 0.08),
+    0 12px 32px -8px rgba(124, 58, 237, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
-.shadow-pop-mint {
-  box-shadow: 0 4px 14px -2px rgba(6, 182, 212, 0.22);
+.shadow-soft {
+  box-shadow:
+    0 2px 6px rgba(15, 15, 26, 0.05),
+    0 8px 20px -4px rgba(15, 15, 26, 0.06);
 }
 
-/* Gradient card backgrounds (subtle) */
-.bg-gradient-accent {
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.12) 0%, rgba(157, 92, 242, 0.06) 100%);
+/* Hero gradient background (featured card) */
+.bg-hero {
+  background:
+    radial-gradient(ellipse at top left, rgba(157, 92, 242, 0.28), transparent 65%),
+    radial-gradient(ellipse at bottom right, rgba(236, 72, 153, 0.22), transparent 65%),
+    linear-gradient(135deg, #7c3aed 0%, #9d5cf2 100%);
 }
-.bg-gradient-pink {
-  background: linear-gradient(135deg, rgba(236, 72, 153, 0.12) 0%, rgba(244, 114, 182, 0.06) 100%);
+
+/* Subtle accent tint (for selected chips etc.) */
+.bg-accent-tint {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.10) 0%, rgba(236, 72, 153, 0.08) 100%);
 }
-.bg-gradient-amber {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.14) 0%, rgba(251, 191, 36, 0.06) 100%);
-}
-.bg-gradient-mint {
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(34, 211, 238, 0.06) 100%);
-}
-.bg-gradient-brand {
+
+/* Brand gradient fill (used on primary CTA and NOW badge) */
+.bg-brand {
   background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+}
+
+/* Uppercase tracked label */
+.label-eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-dark);
 }
 
 /* Custom scrollbar */
@@ -103,6 +123,6 @@ body {
   background: var(--background);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
+  background: var(--border-strong);
   border-radius: 3px;
 }

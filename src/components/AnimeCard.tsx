@@ -11,11 +11,12 @@ const statusLabel: Record<Anime["status"], string> = {
   planned: "予定",
 };
 
-const statusColor: Record<Anime["status"], string> = {
-  watching: "bg-gradient-brand",
-  completed: "bg-success",
-  dropped: "bg-danger",
-  planned: "bg-amber",
+// Status styling — restrained, monochrome-tinted except "watching" which is the hero state
+const statusChip: Record<Anime["status"], string> = {
+  watching: "bg-brand text-white",
+  completed: "bg-success/10 text-success border border-success/30",
+  dropped: "bg-danger/10 text-danger border border-danger/30",
+  planned: "bg-warning/10 text-warning border border-warning/30",
 };
 
 export default function AnimeCard({
@@ -45,15 +46,15 @@ export default function AnimeCard({
   const isWatching = anime.status === "watching";
 
   return (
-    <Link href={`/anime/${anime.id}`}>
+    <Link href={`/anime/${anime.id}`} className="block">
       <div
-        className={`flex gap-3 bg-card rounded-2xl p-3 border transition-all active:scale-[0.98] ${
+        className={`group flex gap-3 bg-card rounded-2xl p-3 border transition-all duration-200 active:scale-[0.99] ${
           isWatching
-            ? "border-accent/50 shadow-pop-accent hover:shadow-pop-pink"
-            : "border-border hover:border-accent/50 hover:shadow-pop-accent"
+            ? "border-accent/30 shadow-card hover:shadow-card-hover hover:-translate-y-0.5"
+            : "border-border shadow-card hover:shadow-card-hover hover:border-border-strong hover:-translate-y-0.5"
         }`}
       >
-        <div className="w-16 h-22 rounded-xl bg-border flex-shrink-0 overflow-hidden flex items-center justify-center relative">
+        <div className="w-16 h-22 rounded-xl bg-border/60 flex-shrink-0 overflow-hidden flex items-center justify-center relative">
           {imageUrl ? (
             <img
               src={imageUrl}
@@ -66,77 +67,79 @@ export default function AnimeCard({
             </svg>
           )}
           {isWatching && (
-            <div className="absolute top-0 left-0 w-full bg-gradient-brand text-white text-[8px] text-center py-0.5 font-bold tracking-wider">
+            <div className="absolute top-1.5 left-1.5 bg-brand text-white text-[9px] px-1.5 py-0.5 font-bold tracking-widest rounded-md shadow-sm">
               NOW
             </div>
           )}
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-bold text-sm truncate">{anime.title}</h3>
-            <span
-              className={`${statusColor[anime.status]} text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0`}
-            >
-              {statusLabel[anime.status]}
-            </span>
+        <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+          <div>
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="font-bold text-sm truncate tracking-tight">{anime.title}</h3>
+              <span
+                className={`${statusChip[anime.status]} text-[10px] font-bold px-2 py-0.5 rounded-md flex-shrink-0`}
+              >
+                {statusLabel[anime.status]}
+              </span>
+            </div>
+            {showDate && (
+              <p className="text-[10px] text-muted-dark mt-0.5 font-medium">
+                {anime.year}年{anime.month}月
+              </p>
+            )}
+
+            {/* Tags */}
+            {anime.tags && anime.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1.5">
+                {anime.tags.slice(0, 3).map((t) => (
+                  <span
+                    key={t}
+                    className="text-[10px] font-medium px-1.5 py-0 rounded text-muted-dark"
+                  >
+                    #{t}
+                  </span>
+                ))}
+                {anime.tags.length > 3 && (
+                  <span className="text-[10px] text-muted px-1">
+                    +{anime.tags.length - 3}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
-          {showDate && (
-            <p className="text-[10px] text-muted mt-0.5">
-              {anime.year}年{anime.month}月
-            </p>
-          )}
 
           {/* Progress bar */}
-          <div className="mt-1.5">
-            <div className="flex items-center justify-between text-[10px] text-muted mb-0.5">
-              <span>
-                {anime.watchedEpisodes} / {anime.totalEpisodes} 話
+          <div className="mt-2">
+            <div className="flex items-center justify-between text-[11px] mb-1">
+              <span className="tabular-nums text-muted-dark font-medium">
+                {anime.watchedEpisodes}
+                <span className="text-muted mx-0.5">/</span>
+                {anime.totalEpisodes}
+                <span className="text-muted ml-0.5">話</span>
               </span>
-              <span>{progress}%</span>
+              <div className="flex items-center gap-2">
+                {anime.rating && (
+                  <span className="flex items-center gap-0.5 text-muted-dark font-medium tabular-nums">
+                    <span className="text-warning text-[11px]">★</span>
+                    {anime.rating}
+                  </span>
+                )}
+                <span className="text-muted tabular-nums text-[10px]">
+                  {hours > 0 ? `${hours}h` : ""}
+                  {mins > 0 ? `${mins}m` : hours === 0 ? "0m" : ""}
+                </span>
+                <span className="font-bold tabular-nums text-foreground">{progress}%</span>
+              </div>
             </div>
-            <div className="w-full h-2 bg-border rounded-full overflow-hidden">
+            <div className="w-full h-1.5 bg-border rounded-full overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all ${
-                  isWatching ? "bg-gradient-brand" : "bg-success"
+                className={`h-full rounded-full transition-all duration-500 ${
+                  isWatching ? "bg-brand" : progress === 100 ? "bg-success" : "bg-accent"
                 }`}
                 style={{ width: `${progress}%` }}
               />
             </div>
           </div>
-
-          {/* Watch time & rating */}
-          <div className="flex items-center justify-between mt-1.5">
-            <p className="text-muted text-xs">
-              {hours > 0
-                ? `${hours}時間${mins > 0 ? `${mins}分` : ""}`
-                : `${mins}分`}
-            </p>
-            {anime.rating && (
-              <div className="flex items-center gap-0.5">
-                <span className="text-warning text-xs">★</span>
-                <span className="text-xs text-muted">{anime.rating}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Tags */}
-          {anime.tags && anime.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-1.5">
-              {anime.tags.slice(0, 3).map((t) => (
-                <span
-                  key={t}
-                  className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-gradient-accent text-accent-dark border border-accent/20"
-                >
-                  #{t}
-                </span>
-              ))}
-              {anime.tags.length > 3 && (
-                <span className="text-[10px] text-muted px-1">
-                  +{anime.tags.length - 3}
-                </span>
-              )}
-            </div>
-          )}
         </div>
       </div>
     </Link>

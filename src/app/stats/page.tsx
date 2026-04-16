@@ -60,28 +60,21 @@ export default function StatsPage() {
       };
     });
 
-  type Theme = "accent" | "pink" | "amber" | "mint" | "success";
-  const themeMap: Record<Theme, { bg: string; border: string; text: string; shadow: string }> = {
-    accent: { bg: "bg-gradient-accent", border: "border-accent/20", text: "text-accent", shadow: "shadow-pop-accent" },
-    pink: { bg: "bg-gradient-pink", border: "border-pink/20", text: "text-pink", shadow: "shadow-pop-pink" },
-    amber: { bg: "bg-gradient-amber", border: "border-amber/20", text: "text-amber", shadow: "shadow-pop-amber" },
-    mint: { bg: "bg-gradient-mint", border: "border-mint/20", text: "text-mint", shadow: "shadow-pop-mint" },
-    success: { bg: "bg-gradient-mint", border: "border-success/20", text: "text-success", shadow: "shadow-pop-mint" },
-  };
-
-  const statCard = (label: string, value: string | number, theme: Theme) => {
-    const t = themeMap[theme];
-    return (
-      <div className={`${t.bg} rounded-2xl p-4 border ${t.border} ${t.shadow} text-center`}>
-        <p className={`text-3xl font-black ${t.text}`}>{value}</p>
-        <p className="text-xs text-muted font-medium mt-1">{label}</p>
-      </div>
-    );
-  };
+  const statCard = (label: string, value: string | number) => (
+    <div className="bg-card border border-border rounded-2xl p-4 shadow-card">
+      <p className="label-eyebrow">{label}</p>
+      <p className="text-3xl font-black text-foreground tabular-nums tracking-tight mt-1 leading-none">
+        {value}
+      </p>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-black brand-text">統計</h1>
+      <div className="pt-1">
+        <p className="label-eyebrow">overview</p>
+        <h1 className="text-3xl font-black tracking-tight mt-1">統計</h1>
+      </div>
 
       {allAnime.length === 0 ? (
         <div className="text-center text-muted py-12">
@@ -90,18 +83,41 @@ export default function StatsPage() {
         </div>
       ) : (
         <>
-          {/* Overall stats */}
+          {/* Featured hero — total watch time */}
+          <div className="bg-hero shadow-hero rounded-3xl p-5 relative overflow-hidden">
+            <p className="label-eyebrow text-white/70">total watch time</p>
+            <p className="text-5xl font-black text-white tabular-nums tracking-tight mt-2 leading-none">
+              {totalHours}
+              <span className="text-2xl font-bold text-white/80 ml-1">h</span>
+              {remainingMins > 0 && (
+                <>
+                  <span className="ml-2">{remainingMins}</span>
+                  <span className="text-2xl font-bold text-white/80 ml-1">m</span>
+                </>
+              )}
+            </p>
+            <div className="mt-4 flex items-baseline gap-4 text-white/90">
+              <div>
+                <p className="text-xs font-medium text-white/60">話数</p>
+                <p className="text-xl font-bold tabular-nums">{totalEpisodes}</p>
+              </div>
+              <div className="w-px h-8 bg-white/20" />
+              <div>
+                <p className="text-xs font-medium text-white/60">作品</p>
+                <p className="text-xl font-bold tabular-nums">{allAnime.length}</p>
+              </div>
+              <div className="w-px h-8 bg-white/20" />
+              <div>
+                <p className="text-xs font-medium text-white/60">評価</p>
+                <p className="text-xl font-bold tabular-nums">★ {avgRating}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Secondary stats grid */}
           <div className="grid grid-cols-2 gap-3">
-            {statCard("完了作品", totalWatched, "success")}
-            {statCard("視聴中", totalWatching, "accent")}
-            {statCard("総視聴話数", totalEpisodes, "pink")}
-            {statCard(
-              "総視聴時間",
-              `${totalHours}h${remainingMins > 0 ? `${remainingMins}m` : ""}`,
-              "amber"
-            )}
-            {statCard("登録作品数", allAnime.length, "mint")}
-            {statCard("平均評価", avgRating, "amber")}
+            {statCard("完了作品", totalWatched)}
+            {statCard("視聴中", totalWatching)}
           </div>
 
           {/* Monthly charts */}
