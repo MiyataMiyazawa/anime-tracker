@@ -171,6 +171,12 @@ export async function markNextEpisodeWatched(animeId: number): Promise<boolean> 
 
     await db.episodes.update(next.id, { watchedAt: new Date() });
     await recomputeWatchedCount(animeId);
+
+    // 全話視聴済みになったら自動で「完了」に
+    const updated = await db.anime.get(animeId);
+    if (updated && updated.watchedEpisodes >= updated.totalEpisodes && updated.status === "watching") {
+      await db.anime.update(animeId, { status: "completed" });
+    }
     return true;
   });
 }
@@ -191,6 +197,11 @@ export async function unmarkLastEpisodeWatched(animeId: number): Promise<boolean
 
     await db.episodes.update(lastWatched.id, { watchedAt: null });
     await recomputeWatchedCount(animeId);
+
+    // 完了状態から-1したら自動で「視聴中」に
+    if (anime.status === "completed") {
+      await db.anime.update(animeId, { status: "watching" });
+    }
     return true;
   });
 }
