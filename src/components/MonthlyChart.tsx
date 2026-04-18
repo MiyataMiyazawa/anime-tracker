@@ -21,8 +21,8 @@ interface ChartDataItem {
 type ChartMode = "hours" | "episodes" | "count";
 
 const modeConfig: Record<ChartMode, { label: string; color: string; unit: string }> = {
-  hours: { label: "視聴時間", color: "#7c3aed", unit: "h" },
-  episodes: { label: "話数", color: "#a78bfa", unit: "話" },
+  hours: { label: "視聴時間", color: "#f97316", unit: "h" },
+  episodes: { label: "話数", color: "#fdba74", unit: "話" },
   count: { label: "作品数", color: "#16a34a", unit: "作品" },
 };
 
@@ -54,11 +54,11 @@ export default function MonthlyChart({ data }: { data: ChartDataItem[] }) {
       <div className="bg-card rounded-xl border border-border p-3">
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={data} margin={{ top: 5, right: 5, bottom: 5, left: -10 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e0ec" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#e8e0d8" vertical={false} />
             <XAxis
               dataKey="label"
               tick={{ fill: "#8b879e", fontSize: 10 }}
-              axisLine={{ stroke: "#e2e0ec" }}
+              axisLine={{ stroke: "#e8e0d8" }}
               tickLine={false}
             />
             <YAxis
@@ -69,7 +69,7 @@ export default function MonthlyChart({ data }: { data: ChartDataItem[] }) {
             <Tooltip
               contentStyle={{
                 backgroundColor: "#ffffff",
-                border: "1px solid #e2e0ec",
+                border: "1px solid #e8e0d8",
                 borderRadius: "8px",
                 fontSize: "12px",
                 color: "#1a1a2e",
