@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { db, markNextEpisodeWatched } from "@/lib/db";
+import { db, markNextEpisodeWatched, unmarkLastEpisodeWatched } from "@/lib/db";
 import AnimeCard from "@/components/AnimeCard";
 import MonthSelector from "@/components/MonthSelector";
 
@@ -219,7 +219,8 @@ export default function HomePage() {
               key={anime.id}
               anime={anime}
               showDate={isFiltering}
-              onSwipeRight={() => markNextEpisodeWatched(anime.id)}
+              onSwipeLeft={() => markNextEpisodeWatched(anime.id)}
+              onSwipeRight={() => unmarkLastEpisodeWatched(anime.id)}
             />
           ))}
         </div>

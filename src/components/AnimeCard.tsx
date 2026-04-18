@@ -25,15 +25,17 @@ const MAX_OFFSET = 120;
 export default function AnimeCard({
   anime,
   showDate = false,
+  onSwipeLeft,
   onSwipeRight,
 }: {
   anime: Anime;
   showDate?: boolean;
+  onSwipeLeft?: () => void;
   onSwipeRight?: () => void;
 }) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [offsetX, setOffsetX] = useState(0);
-  const [feedback, setFeedback] = useState(false);
+  const [feedbackText, setFeedbackText] = useState<string | null>(null);
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
   const swiping = useRef(false);
@@ -56,6 +58,7 @@ export default function AnimeCard({
       : 0;
   const isWatching = anime.status === "watching";
   const canIncrement = anime.watchedEpisodes < anime.totalEpisodes;
+  const canDecrement = anime.watchedEpisodes > 0;
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -76,22 +79,36 @@ export default function AnimeCard({
       }
     }
 
-    if (swiping.current && dx > 0 && canIncrement && onSwipeRight) {
+    if (!swiping.current) return;
+
+    // Left swipe (dx < 0) → +1, Right swipe (dx > 0) → -1
+    const canSwipeLeft = dx < 0 && canIncrement && onSwipeLeft;
+    const canSwipeRight = dx > 0 && canDecrement && onSwipeRight;
+
+    if (canSwipeLeft || canSwipeRight) {
       didSwipe.current = true;
-      const damped = Math.min(dx * 0.7, MAX_OFFSET);
-      setOffsetX(damped);
+      const absDx = Math.abs(dx);
+      const damped = Math.min(absDx * 0.7, MAX_OFFSET);
+      setOffsetX(dx < 0 ? -damped : damped);
     }
-  }, [canIncrement, onSwipeRight]);
+  }, [canIncrement, canDecrement, onSwipeLeft, onSwipeRight]);
 
   const handleTouchEnd = useCallback(() => {
-    if (didSwipe.current && offsetX > SWIPE_THRESHOLD && onSwipeRight) {
-      onSwipeRight();
-      setFeedback(true);
-      setTimeout(() => setFeedback(false), 900);
+    const absOffset = Math.abs(offsetX);
+    if (didSwipe.current && absOffset > SWIPE_THRESHOLD) {
+      if (offsetX < 0 && onSwipeLeft) {
+        onSwipeLeft();
+        setFeedbackText("+1話");
+        setTimeout(() => setFeedbackText(null), 900);
+      } else if (offsetX > 0 && onSwipeRight) {
+        onSwipeRight();
+        setFeedbackText("-1話");
+        setTimeout(() => setFeedbackText(null), 900);
+      }
     }
     setOffsetX(0);
     swiping.current = false;
-  }, [offsetX, onSwipeRight]);
+  }, [offsetX, onSwipeLeft, onSwipeRight]);
 
   const handleClick = useCallback((e: React.MouseEvent) => {
     if (didSwipe.current) {
@@ -100,14 +117,17 @@ export default function AnimeCard({
     }
   }, []);
 
-  const thresholdReached = offsetX > SWIPE_THRESHOLD;
+  const absOffset = Math.abs(offsetX);
+  const thresholdReached = absOffset > SWIPE_THRESHOLD;
+  const isSwipingLeft = offsetX < 0;
+  const isSwipingRight = offsetX > 0;
 
   return (
-    <div className="relative">
-      {/* Swipe background indicator */}
-      {offsetX > 0 && (
+    <div className="relative overflow-hidden rounded-2xl">
+      {/* Swipe background: left swipe → +1 (green, right side) */}
+      {isSwipingLeft && (
         <div
-          className={`absolute inset-0 rounded-2xl flex items-center pl-5 transition-colors ${
+          className={`absolute inset-0 flex items-center justify-end pr-5 transition-colors ${
             thresholdReached ? "bg-success/20" : "bg-success/8"
           }`}
         >
@@ -121,17 +141,38 @@ export default function AnimeCard({
         </div>
       )}
 
+      {/* Swipe background: right swipe → -1 (orange, left side) */}
+      {isSwipingRight && (
+        <div
+          className={`absolute inset-0 flex items-center pl-5 transition-colors ${
+            thresholdReached ? "bg-warning/20" : "bg-warning/8"
+          }`}
+        >
+          <span
+            className={`font-bold text-sm transition-all ${
+              thresholdReached ? "text-warning scale-110" : "text-warning/50 scale-100"
+            }`}
+          >
+            -1話
+          </span>
+        </div>
+      )}
+
       {/* Feedback badge */}
-      {feedback && (
-        <div className="absolute top-1/2 right-4 -translate-y-1/2 z-10 bg-success text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg animate-[fade-out_0.9s_ease-out_forwards]">
-          +1話
+      {feedbackText && (
+        <div
+          className={`absolute top-1/2 z-10 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg animate-[fade-out_0.9s_ease-out_forwards] ${
+            feedbackText === "+1話" ? "right-4 bg-success" : "left-4 bg-warning"
+          }`}
+        >
+          {feedbackText}
         </div>
       )}
 
       <Link href={`/anime/${anime.id}`} className="block" onClick={handleClick}>
         <div
           className={`group flex gap-3 bg-card rounded-2xl p-3 border transition-all ${
-            offsetX > 0 ? "" : "duration-200 active:scale-[0.99]"
+            offsetX !== 0 ? "" : "duration-200 active:scale-[0.99]"
           } ${
             isWatching
               ? "border-accent/30 shadow-card hover:shadow-card-hover hover:-translate-y-0.5"
