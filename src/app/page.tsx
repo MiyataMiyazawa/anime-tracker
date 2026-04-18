@@ -12,10 +12,11 @@ export default function HomePage() {
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [search, setSearch] = useState("");
   const [tagFilter, setTagFilter] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
   const query = search.trim().toLowerCase();
   const isSearching = query.length > 0;
-  const isFiltering = isSearching || tagFilter !== null;
+  const isFiltering = isSearching || tagFilter !== null || statusFilter !== null;
 
   // 全タグ一覧（頻度順）
   const allTags = useLiveQuery(async () => {
@@ -37,6 +38,11 @@ export default function HomePage() {
       if (tagFilter) {
         collection = db.anime.where("tags").equals(tagFilter);
       }
+      if (statusFilter) {
+        collection = tagFilter
+          ? collection.and((a) => a.status === statusFilter)
+          : db.anime.where("status").equals(statusFilter);
+      }
       const all = await collection.toArray();
       const filtered = isSearching
         ? all.filter((a) => a.title.toLowerCase().includes(query))
@@ -46,7 +52,7 @@ export default function HomePage() {
       );
     }
     return db.anime.where({ year, month }).toArray();
-  }, [year, month, isFiltering, isSearching, query, tagFilter]);
+  }, [year, month, isFiltering, isSearching, query, tagFilter, statusFilter]);
 
   const monthStats =
     !isFiltering && animeList
@@ -116,6 +122,31 @@ export default function HomePage() {
             </svg>
           </button>
         )}
+      </div>
+
+      {/* Status filter */}
+      <div className="flex gap-1.5">
+        {([
+          { key: "watching", label: "視聴中" },
+          { key: "completed", label: "完了" },
+          { key: "planned", label: "予定" },
+          { key: "dropped", label: "中断" },
+        ] as const).map(({ key, label }) => {
+          const active = statusFilter === key;
+          return (
+            <button
+              key={key}
+              onClick={() => setStatusFilter(active ? null : key)}
+              className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-all active:scale-95 ${
+                active
+                  ? "border-accent bg-accent text-white"
+                  : "border-border bg-card text-muted-dark hover:border-accent/50 hover:text-foreground"
+              }`}
+            >
+              {label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Tag filter */}
@@ -191,6 +222,9 @@ export default function HomePage() {
       {isFiltering && animeList && (
         <p className="text-xs text-muted">
           {animeList.length}件ヒット
+          {statusFilter && <span className="ml-1">（{
+            { watching: "視聴中", completed: "完了", planned: "予定", dropped: "中断" }[statusFilter]
+          }）</span>}
           {tagFilter && <span className="ml-1">（#{tagFilter}）</span>}
         </p>
       )}
