@@ -126,3 +126,10 @@ body {
   background: var(--border-strong);
   border-radius: 3px;
 }
+
+/* Swipe feedback fade-out */
+@keyframes fade-out {
+  0% { opacity: 1; transform: translateY(-50%) scale(1); }
+  70% { opacity: 1; transform: translateY(-50%) scale(1.05); }
+  100% { opacity: 0; transform: translateY(-50%) scale(0.9); }
+}

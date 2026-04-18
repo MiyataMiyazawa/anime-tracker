@@ -155,6 +155,26 @@ export async function createInitialEpisodes(
   }
 }
 
+// 次の未視聴エピソードを視聴済みにする（スワイプ +1 用）
+export async function markNextEpisodeWatched(animeId: number): Promise<boolean> {
+  return db.transaction("rw", db.anime, db.episodes, async () => {
+    const anime = await db.anime.get(animeId);
+    if (!anime || anime.watchedEpisodes >= anime.totalEpisodes) return false;
+
+    const episodes = await db.episodes
+      .where("animeId")
+      .equals(animeId)
+      .sortBy("number");
+
+    const next = episodes.find((e) => e.watchedAt == null);
+    if (!next) return false;
+
+    await db.episodes.update(next.id, { watchedAt: new Date() });
+    await recomputeWatchedCount(animeId);
+    return true;
+  });
+}
+
 // アニメ削除時の episode 削除
 export async function deleteAnimeWithEpisodes(animeId: number) {
   await db.transaction("rw", db.anime, db.episodes, async () => {

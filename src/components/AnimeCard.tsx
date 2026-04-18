@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import type { Anime } from "@/lib/db";
 
 const statusLabel: Record<Anime["status"], string> = {
@@ -19,14 +19,25 @@ const statusChip: Record<Anime["status"], string> = {
   planned: "bg-warning/10 text-warning border border-warning/30",
 };
 
+const SWIPE_THRESHOLD = 70;
+const MAX_OFFSET = 120;
+
 export default function AnimeCard({
   anime,
   showDate = false,
+  onSwipeRight,
 }: {
   anime: Anime;
   showDate?: boolean;
+  onSwipeRight?: () => void;
 }) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [offsetX, setOffsetX] = useState(0);
+  const [feedback, setFeedback] = useState(false);
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const swiping = useRef(false);
+  const didSwipe = useRef(false);
 
   useEffect(() => {
     if (anime.imageBlob) {
@@ -44,98 +55,179 @@ export default function AnimeCard({
       ? Math.round((anime.watchedEpisodes / anime.totalEpisodes) * 100)
       : 0;
   const isWatching = anime.status === "watching";
+  const canIncrement = anime.watchedEpisodes < anime.totalEpisodes;
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    swiping.current = false;
+    didSwipe.current = false;
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    const dx = e.touches[0].clientX - touchStartX.current;
+    const dy = e.touches[0].clientY - touchStartY.current;
+
+    if (!swiping.current && Math.abs(dx) > 10) {
+      if (Math.abs(dx) > Math.abs(dy) * 1.5) {
+        swiping.current = true;
+      } else {
+        return;
+      }
+    }
+
+    if (swiping.current && dx > 0 && canIncrement && onSwipeRight) {
+      didSwipe.current = true;
+      const damped = Math.min(dx * 0.7, MAX_OFFSET);
+      setOffsetX(damped);
+    }
+  }, [canIncrement, onSwipeRight]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (didSwipe.current && offsetX > SWIPE_THRESHOLD && onSwipeRight) {
+      onSwipeRight();
+      setFeedback(true);
+      setTimeout(() => setFeedback(false), 900);
+    }
+    setOffsetX(0);
+    swiping.current = false;
+  }, [offsetX, onSwipeRight]);
+
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    if (didSwipe.current) {
+      e.preventDefault();
+      didSwipe.current = false;
+    }
+  }, []);
+
+  const thresholdReached = offsetX > SWIPE_THRESHOLD;
 
   return (
-    <Link href={`/anime/${anime.id}`} className="block">
-      <div
-        className={`group flex gap-3 bg-card rounded-2xl p-3 border transition-all duration-200 active:scale-[0.99] ${
-          isWatching
-            ? "border-accent/30 shadow-card hover:shadow-card-hover hover:-translate-y-0.5"
-            : "border-border shadow-card hover:shadow-card-hover hover:border-border-strong hover:-translate-y-0.5"
-        }`}
-      >
-        <div className="w-16 h-22 rounded-xl bg-border/60 flex-shrink-0 overflow-hidden flex items-center justify-center relative">
-          {imageUrl ? (
-            <img
-              src={imageUrl}
-              alt={anime.title}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} className="text-muted">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
-            </svg>
-          )}
-          {isWatching && (
-            <div className="absolute top-1.5 left-1.5 bg-brand text-white text-[9px] px-1.5 py-0.5 font-bold tracking-widest rounded-md shadow-sm">
-              NOW
-            </div>
-          )}
+    <div className="relative">
+      {/* Swipe background indicator */}
+      {offsetX > 0 && (
+        <div
+          className={`absolute inset-0 rounded-2xl flex items-center pl-5 transition-colors ${
+            thresholdReached ? "bg-success/20" : "bg-success/8"
+          }`}
+        >
+          <span
+            className={`font-bold text-sm transition-all ${
+              thresholdReached ? "text-success scale-110" : "text-success/50 scale-100"
+            }`}
+          >
+            +1話
+          </span>
         </div>
-        <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
-          <div>
-            <div className="flex items-start justify-between gap-2">
-              <h3 className="font-bold text-sm truncate tracking-tight">{anime.title}</h3>
-              <span
-                className={`${statusChip[anime.status]} text-[10px] font-bold px-2 py-0.5 rounded-md flex-shrink-0`}
-              >
-                {statusLabel[anime.status]}
-              </span>
-            </div>
-            {showDate && (
-              <p className="text-[10px] text-muted-dark mt-0.5 font-medium">
-                {anime.year}年{anime.month}月
-              </p>
-            )}
+      )}
 
-            {/* Tags */}
-            {anime.tags && anime.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-1.5">
-                {anime.tags.slice(0, 3).map((t) => (
-                  <span
-                    key={t}
-                    className="text-[10px] font-medium px-1.5 py-0 rounded text-muted-dark"
-                  >
-                    #{t}
-                  </span>
-                ))}
-                {anime.tags.length > 3 && (
-                  <span className="text-[10px] text-muted px-1">
-                    +{anime.tags.length - 3}
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
+      {/* Feedback badge */}
+      {feedback && (
+        <div className="absolute top-1/2 right-4 -translate-y-1/2 z-10 bg-success text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg animate-[fade-out_0.9s_ease-out_forwards]">
+          +1話
+        </div>
+      )}
 
-          {/* Progress bar */}
-          <div className="mt-2">
-            <div className="flex items-center justify-between text-[11px] mb-1">
-              <span className="tabular-nums text-muted-dark font-medium">
-                {anime.watchedEpisodes}
-                <span className="text-muted mx-0.5">/</span>
-                {anime.totalEpisodes}
-                <span className="text-muted ml-0.5">話</span>
-              </span>
-              <div className="flex items-center gap-2">
-                <span className="text-muted tabular-nums text-[10px]">
-                  {hours > 0 ? `${hours}h` : ""}
-                  {mins > 0 ? `${mins}m` : hours === 0 ? "0m" : ""}
-                </span>
-                <span className="font-bold tabular-nums text-foreground">{progress}%</span>
-              </div>
-            </div>
-            <div className="w-full h-1.5 bg-border rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-500 ${
-                  isWatching ? "bg-brand" : progress === 100 ? "bg-success" : "bg-accent"
-                }`}
-                style={{ width: `${progress}%` }}
+      <Link href={`/anime/${anime.id}`} className="block" onClick={handleClick}>
+        <div
+          className={`group flex gap-3 bg-card rounded-2xl p-3 border transition-all ${
+            offsetX > 0 ? "" : "duration-200 active:scale-[0.99]"
+          } ${
+            isWatching
+              ? "border-accent/30 shadow-card hover:shadow-card-hover hover:-translate-y-0.5"
+              : "border-border shadow-card hover:shadow-card-hover hover:border-border-strong hover:-translate-y-0.5"
+          }`}
+          style={{
+            transform: `translateX(${offsetX}px)`,
+            transition: offsetX === 0 ? "transform 0.3s ease-out" : "none",
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div className="w-16 h-22 rounded-xl bg-border/60 flex-shrink-0 overflow-hidden flex items-center justify-center relative">
+            {imageUrl ? (
+              <img
+                src={imageUrl}
+                alt={anime.title}
+                className="w-full h-full object-cover"
               />
+            ) : (
+              <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} className="text-muted">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+              </svg>
+            )}
+            {isWatching && (
+              <div className="absolute top-1.5 left-1.5 bg-brand text-white text-[9px] px-1.5 py-0.5 font-bold tracking-widest rounded-md shadow-sm">
+                NOW
+              </div>
+            )}
+          </div>
+          <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+            <div>
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="font-bold text-sm truncate tracking-tight">{anime.title}</h3>
+                <span
+                  className={`${statusChip[anime.status]} text-[10px] font-bold px-2 py-0.5 rounded-md flex-shrink-0`}
+                >
+                  {statusLabel[anime.status]}
+                </span>
+              </div>
+              {showDate && (
+                <p className="text-[10px] text-muted-dark mt-0.5 font-medium">
+                  {anime.year}年{anime.month}月
+                </p>
+              )}
+
+              {/* Tags */}
+              {anime.tags && anime.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  {anime.tags.slice(0, 3).map((t) => (
+                    <span
+                      key={t}
+                      className="text-[10px] font-medium px-1.5 py-0 rounded text-muted-dark"
+                    >
+                      #{t}
+                    </span>
+                  ))}
+                  {anime.tags.length > 3 && (
+                    <span className="text-[10px] text-muted px-1">
+                      +{anime.tags.length - 3}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Progress bar */}
+            <div className="mt-2">
+              <div className="flex items-center justify-between text-[11px] mb-1">
+                <span className="tabular-nums text-muted-dark font-medium">
+                  {anime.watchedEpisodes}
+                  <span className="text-muted mx-0.5">/</span>
+                  {anime.totalEpisodes}
+                  <span className="text-muted ml-0.5">話</span>
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted tabular-nums text-[10px]">
+                    {hours > 0 ? `${hours}h` : ""}
+                    {mins > 0 ? `${mins}m` : hours === 0 ? "0m" : ""}
+                  </span>
+                  <span className="font-bold tabular-nums text-foreground">{progress}%</span>
+                </div>
+              </div>
+              <div className="w-full h-1.5 bg-border rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    isWatching ? "bg-brand" : progress === 100 ? "bg-success" : "bg-accent"
+                  }`}
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </Link>
+      </Link>
+    </div>
   );
 }
