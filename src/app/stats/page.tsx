@@ -38,10 +38,15 @@ export default function StatsPage() {
     current.minutes += a.watchedEpisodes * a.episodeDuration;
     monthlyMap.set(key, current);
   }
-  // 直近8か月分は必ず含める（データがない月は0埋め）
+  // 最古のデータ月〜今月まで全月を0埋め（最低8か月）
   const now = new Date();
-  for (let i = 0; i < 8; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+  const keys = [...monthlyMap.keys()].sort();
+  const earliest = keys.length > 0
+    ? new Date(Number(keys[0].split("-")[0]), Number(keys[0].split("-")[1]) - 1, 1)
+    : new Date(now.getFullYear(), now.getMonth() - 7, 1);
+  const minStart = new Date(now.getFullYear(), now.getMonth() - 7, 1);
+  const start = earliest < minStart ? earliest : minStart;
+  for (let d = new Date(start); d <= now; d.setMonth(d.getMonth() + 1)) {
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     if (!monthlyMap.has(key)) {
       monthlyMap.set(key, { count: 0, episodes: 0, minutes: 0 });
