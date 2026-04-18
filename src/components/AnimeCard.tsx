@@ -25,13 +25,13 @@ const MAX_OFFSET = 120;
 export default function AnimeCard({
   anime,
   showDate = false,
-  onSwipeLeft,
-  onSwipeRight,
+  onIncrement,
+  onDecrement,
 }: {
   anime: Anime;
   showDate?: boolean;
-  onSwipeLeft?: () => void;
-  onSwipeRight?: () => void;
+  onIncrement?: () => void;
+  onDecrement?: () => void;
 }) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [offsetX, setOffsetX] = useState(0);
@@ -82,8 +82,8 @@ export default function AnimeCard({
     if (!swiping.current) return;
 
     // Left swipe (dx < 0) → +1, Right swipe (dx > 0) → -1
-    const canSwipeLeft = dx < 0 && canIncrement && onSwipeLeft;
-    const canSwipeRight = dx > 0 && canDecrement && onSwipeRight;
+    const canSwipeLeft = dx < 0 && canIncrement && onIncrement;
+    const canSwipeRight = dx > 0 && canDecrement && onDecrement;
 
     if (canSwipeLeft || canSwipeRight) {
       didSwipe.current = true;
@@ -91,24 +91,24 @@ export default function AnimeCard({
       const damped = Math.min(absDx * 0.7, MAX_OFFSET);
       setOffsetX(dx < 0 ? -damped : damped);
     }
-  }, [canIncrement, canDecrement, onSwipeLeft, onSwipeRight]);
+  }, [canIncrement, canDecrement, onIncrement, onDecrement]);
 
   const handleTouchEnd = useCallback(() => {
     const absOffset = Math.abs(offsetX);
     if (didSwipe.current && absOffset > SWIPE_THRESHOLD) {
-      if (offsetX < 0 && onSwipeLeft) {
-        onSwipeLeft();
+      if (offsetX < 0 && onIncrement) {
+        onIncrement();
         setFeedbackText("+1話");
         setTimeout(() => setFeedbackText(null), 900);
-      } else if (offsetX > 0 && onSwipeRight) {
-        onSwipeRight();
+      } else if (offsetX > 0 && onDecrement) {
+        onDecrement();
         setFeedbackText("-1話");
         setTimeout(() => setFeedbackText(null), 900);
       }
     }
     setOffsetX(0);
     swiping.current = false;
-  }, [offsetX, onSwipeLeft, onSwipeRight]);
+  }, [offsetX, onIncrement, onDecrement]);
 
   const handleClick = useCallback((e: React.MouseEvent) => {
     if (didSwipe.current) {
@@ -240,15 +240,51 @@ export default function AnimeCard({
               )}
             </div>
 
-            {/* Progress bar */}
+            {/* Progress bar + stepper */}
             <div className="mt-2">
               <div className="flex items-center justify-between text-[11px] mb-1">
-                <span className="tabular-nums text-muted-dark font-medium">
-                  {anime.watchedEpisodes}
-                  <span className="text-muted mx-0.5">/</span>
-                  {anime.totalEpisodes}
-                  <span className="text-muted ml-0.5">話</span>
-                </span>
+                <div className="flex items-center gap-1.5">
+                  {onDecrement && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (canDecrement) onDecrement();
+                      }}
+                      disabled={!canDecrement}
+                      className="w-5 h-5 rounded-md border border-border bg-card flex items-center justify-center text-muted-dark hover:border-accent hover:text-accent active:scale-90 disabled:opacity-30 disabled:pointer-events-none transition-all"
+                      aria-label="1話戻す"
+                    >
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" d="M5 12h14" />
+                      </svg>
+                    </button>
+                  )}
+                  <span className="tabular-nums text-muted-dark font-medium">
+                    {anime.watchedEpisodes}
+                    <span className="text-muted mx-0.5">/</span>
+                    {anime.totalEpisodes}
+                    <span className="text-muted ml-0.5">話</span>
+                  </span>
+                  {onIncrement && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (canIncrement) onIncrement();
+                      }}
+                      disabled={!canIncrement}
+                      className="w-5 h-5 rounded-md border border-border bg-card flex items-center justify-center text-muted-dark hover:border-accent hover:text-accent active:scale-90 disabled:opacity-30 disabled:pointer-events-none transition-all"
+                      aria-label="1話進める"
+                    >
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" d="M12 5v14M5 12h14" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
                 <div className="flex items-center gap-2">
                   <span className="text-muted tabular-nums text-[10px]">
                     {hours > 0 ? `${hours}h` : ""}

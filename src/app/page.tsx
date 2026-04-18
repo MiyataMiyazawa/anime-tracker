@@ -13,10 +13,11 @@ export default function HomePage() {
   const [search, setSearch] = useState("");
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
   const query = search.trim().toLowerCase();
   const isSearching = query.length > 0;
-  const isFiltering = isSearching || tagFilter !== null || statusFilter !== null;
+  const isFiltering = isSearching || tagFilter !== null || statusFilter !== null || showAll;
 
   // 全タグ一覧（頻度順）
   const allTags = useLiveQuery(async () => {
@@ -124,14 +125,29 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* Status filter */}
+      {/* Status filter + show all toggle */}
       <div className="flex gap-1.5">
-        {([
-          { key: "watching", label: "視聴中" },
-          { key: "completed", label: "完了" },
-          { key: "planned", label: "予定" },
-          { key: "dropped", label: "中断" },
-        ] as const).map(({ key, label }) => {
+        <button
+          onClick={() => {
+            setShowAll(!showAll);
+            if (!showAll) { setStatusFilter(null); setTagFilter(null); setSearch(""); }
+          }}
+          className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-all active:scale-95 ${
+            showAll
+              ? "border-accent bg-accent text-white"
+              : "border-border bg-card text-muted-dark hover:border-accent/50 hover:text-foreground"
+          }`}
+        >
+          全て
+        </button>
+        {(
+          [
+            { key: "watching", label: "視聴中" },
+            { key: "completed", label: "完了" },
+            { key: "planned", label: "予定" },
+            { key: "dropped", label: "中断" },
+          ] as const
+        ).map(({ key, label }) => {
           const active = statusFilter === key;
           return (
             <button
@@ -253,8 +269,8 @@ export default function HomePage() {
               key={anime.id}
               anime={anime}
               showDate={isFiltering}
-              onSwipeLeft={() => markNextEpisodeWatched(anime.id)}
-              onSwipeRight={() => unmarkLastEpisodeWatched(anime.id)}
+              onIncrement={() => markNextEpisodeWatched(anime.id)}
+              onDecrement={() => unmarkLastEpisodeWatched(anime.id)}
             />
           ))}
         </div>
