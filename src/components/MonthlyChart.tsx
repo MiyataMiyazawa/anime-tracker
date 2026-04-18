@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   BarChart,
   Bar,
   XAxis,
   YAxis,
   Tooltip,
-  ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
 
@@ -26,9 +25,23 @@ const modeConfig: Record<ChartMode, { label: string; color: string; unit: string
   count: { label: "作品数", color: "#16a34a", unit: "作品" },
 };
 
+const VISIBLE_MONTHS = 8;
+const BAR_WIDTH = 48;
+
 export default function MonthlyChart({ data }: { data: ChartDataItem[] }) {
   const [mode, setMode] = useState<ChartMode>("hours");
   const config = modeConfig[mode];
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const chartWidth = Math.max(data.length * BAR_WIDTH, VISIBLE_MONTHS * BAR_WIDTH);
+
+  // Scroll to the right end on mount so the latest months are visible
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) {
+      el.scrollLeft = el.scrollWidth - el.clientWidth;
+    }
+  }, [data.length]);
 
   return (
     <div className="space-y-3">
@@ -52,8 +65,17 @@ export default function MonthlyChart({ data }: { data: ChartDataItem[] }) {
       </div>
 
       <div className="bg-card rounded-xl border border-border p-3">
-        <ResponsiveContainer width="100%" height={220}>
-          <BarChart data={data} margin={{ top: 5, right: 5, bottom: 5, left: -10 }}>
+        <div
+          ref={scrollRef}
+          className="overflow-x-auto"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
+          <BarChart
+            width={chartWidth}
+            height={220}
+            data={data}
+            margin={{ top: 5, right: 5, bottom: 5, left: -10 }}
+          >
             <CartesianGrid strokeDasharray="3 3" stroke="#e8e0d8" vertical={false} />
             <XAxis
               dataKey="label"
@@ -87,7 +109,7 @@ export default function MonthlyChart({ data }: { data: ChartDataItem[] }) {
               maxBarSize={40}
             />
           </BarChart>
-        </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );
