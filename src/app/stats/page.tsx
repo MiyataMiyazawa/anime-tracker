@@ -21,16 +21,6 @@ export default function StatsPage() {
   const totalHours = Math.floor(totalMinutes / 60);
   const remainingMins = totalMinutes % 60;
 
-  const avgRating =
-    allAnime.filter((a) => a.rating).length > 0
-      ? (
-          allAnime
-            .filter((a) => a.rating)
-            .reduce((s, a) => s + (a.rating ?? 0), 0) /
-          allAnime.filter((a) => a.rating).length
-        ).toFixed(1)
-      : "-";
-
   // Monthly breakdown for chart
   const monthlyMap = new Map<
     string,
@@ -105,11 +95,6 @@ export default function StatsPage() {
               <div>
                 <p className="text-xs font-medium text-white/60">作品</p>
                 <p className="text-xl font-bold tabular-nums">{allAnime.length}</p>
-              </div>
-              <div className="w-px h-8 bg-white/20" />
-              <div>
-                <p className="text-xs font-medium text-white/60">評価</p>
-                <p className="text-xl font-bold tabular-nums">★ {avgRating}</p>
               </div>
             </div>
           </div>

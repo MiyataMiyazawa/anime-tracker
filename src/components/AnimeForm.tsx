@@ -37,9 +37,6 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
   const [year, setYear] = useState(String(initial?.year ?? now.getFullYear()));
   const [month, setMonth] = useState(initial?.month ?? now.getMonth() + 1);
   const [status, setStatus] = useState<Anime["status"]>(initial?.status ?? "watching");
-  const [rating, setRating] = useState<string>(
-    initial?.rating != null ? String(initial.rating) : ""
-  );
   const [memo, setMemo] = useState(initial?.memo ?? "");
   const [tags, setTags] = useState<string[]>(initial?.tags ?? []);
   const [tagInput, setTagInput] = useState("");
@@ -134,7 +131,7 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
       year: Number(year) || now.getFullYear(),
       month,
       status,
-      rating: rating === "" ? null : Number(rating),
+      rating: null,
       memo,
       tags,
       imageBlob,
@@ -277,22 +274,6 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
             </button>
           ))}
         </div>
-      </div>
-
-      {/* Rating */}
-      <div>
-        <label className={labelClass}>評価（1〜10）</label>
-        <input
-          type="number"
-          inputMode="numeric"
-          value={rating}
-          onChange={(e) => setRating(normalizeNumStr(e.target.value))}
-          onFocus={(e) => e.target.select()}
-          min={1}
-          max={10}
-          placeholder="未評価"
-          className={inputClass}
-        />
       </div>
 
       {/* Memo */}

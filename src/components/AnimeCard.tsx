@@ -118,12 +118,6 @@ export default function AnimeCard({
                 <span className="text-muted ml-0.5">話</span>
               </span>
               <div className="flex items-center gap-2">
-                {anime.rating && (
-                  <span className="flex items-center gap-0.5 text-muted-dark font-medium tabular-nums">
-                    <span className="text-warning text-[11px]">★</span>
-                    {anime.rating}
-                  </span>
-                )}
                 <span className="text-muted tabular-nums text-[10px]">
                   {hours > 0 ? `${hours}h` : ""}
                   {mins > 0 ? `${mins}m` : hours === 0 ? "0m" : ""}
