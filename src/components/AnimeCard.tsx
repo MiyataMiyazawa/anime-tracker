@@ -243,48 +243,12 @@ export default function AnimeCard({
             {/* Progress bar + stepper */}
             <div className="mt-2">
               <div className="flex items-center justify-between text-[11px] mb-1">
-                <div className="flex items-center gap-1.5">
-                  {onDecrement && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        if (canDecrement) onDecrement();
-                      }}
-                      disabled={!canDecrement}
-                      className="w-5 h-5 rounded-md border border-border bg-card flex items-center justify-center text-muted-dark hover:border-accent hover:text-accent active:scale-90 disabled:opacity-30 disabled:pointer-events-none transition-all"
-                      aria-label="1話戻す"
-                    >
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
-                        <path strokeLinecap="round" d="M5 12h14" />
-                      </svg>
-                    </button>
-                  )}
-                  <span className="tabular-nums text-muted-dark font-medium">
-                    {anime.watchedEpisodes}
-                    <span className="text-muted mx-0.5">/</span>
-                    {anime.totalEpisodes}
-                    <span className="text-muted ml-0.5">話</span>
-                  </span>
-                  {onIncrement && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        if (canIncrement) onIncrement();
-                      }}
-                      disabled={!canIncrement}
-                      className="w-5 h-5 rounded-md border border-border bg-card flex items-center justify-center text-muted-dark hover:border-accent hover:text-accent active:scale-90 disabled:opacity-30 disabled:pointer-events-none transition-all"
-                      aria-label="1話進める"
-                    >
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
-                        <path strokeLinecap="round" d="M12 5v14M5 12h14" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
+                <span className="tabular-nums text-muted-dark font-medium">
+                  {anime.watchedEpisodes}
+                  <span className="text-muted mx-0.5">/</span>
+                  {anime.totalEpisodes}
+                  <span className="text-muted ml-0.5">話</span>
+                </span>
                 <div className="flex items-center gap-2">
                   <span className="text-muted tabular-nums text-[10px]">
                     {hours > 0 ? `${hours}h` : ""}
