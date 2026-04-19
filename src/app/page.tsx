@@ -14,6 +14,8 @@ export default function HomePage() {
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
+  const [showStatusFilter, setShowStatusFilter] = useState(false);
+  const [showTagFilter, setShowTagFilter] = useState(false);
 
   const query = search.trim().toLowerCase();
   const isSearching = query.length > 0;
@@ -129,7 +131,7 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* Status filter + show all toggle */}
+      {/* Filter buttons row */}
       <div className="flex gap-1.5">
         <button
           onClick={() => {
@@ -144,48 +146,94 @@ export default function HomePage() {
         >
           全て
         </button>
-        {(
-          [
-            { key: "watching", label: "視聴中" },
-            { key: "completed", label: "完了" },
-            { key: "planned", label: "予定" },
-            { key: "dropped", label: "中断" },
-          ] as const
-        ).map(({ key, label }) => {
-          const active = statusFilter === key;
-          return (
-            <button
-              key={key}
-              onClick={() => setStatusFilter(active ? null : key)}
-              className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-all active:scale-95 ${
-                active
-                  ? "border-accent bg-accent text-white"
-                  : "border-border bg-card text-muted-dark hover:border-accent/50 hover:text-foreground"
-              }`}
-            >
-              {label}
-            </button>
-          );
-        })}
+        <button
+          onClick={() => { setShowStatusFilter(!showStatusFilter); setShowTagFilter(false); }}
+          className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-all active:scale-95 flex items-center gap-1 ${
+            statusFilter || showStatusFilter
+              ? "border-accent bg-accent text-white"
+              : "border-border bg-card text-muted-dark hover:border-accent/50 hover:text-foreground"
+          }`}
+        >
+          {statusFilter
+            ? { watching: "視聴中", completed: "完了", planned: "予定", dropped: "中断" }[statusFilter]
+            : "視聴状況"}
+          <svg
+            className={`transition-transform ${showStatusFilter ? "rotate-180" : ""}`}
+            width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <button
+          onClick={() => { setShowTagFilter(!showTagFilter); setShowStatusFilter(false); }}
+          className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-all active:scale-95 flex items-center gap-1 ${
+            tagFilter || showTagFilter
+              ? "border-accent bg-accent text-white"
+              : "border-border bg-card text-muted-dark hover:border-accent/50 hover:text-foreground"
+          }`}
+        >
+          {tagFilter ? `#${tagFilter}` : "タグ"}
+          <svg
+            className={`transition-transform ${showTagFilter ? "rotate-180" : ""}`}
+            width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
       </div>
 
-      {/* Tag filter */}
-      {allTags && allTags.length > 0 && (
+      {/* Status filter dropdown */}
+      {showStatusFilter && (
         <div className="flex flex-wrap gap-1.5">
-          {tagFilter && (
+          {(
+            [
+              { key: "watching", label: "視聴中" },
+              { key: "completed", label: "完了" },
+              { key: "planned", label: "予定" },
+              { key: "dropped", label: "中断" },
+            ] as const
+          ).map(({ key, label }) => {
+            const active = statusFilter === key;
+            return (
+              <button
+                key={key}
+                onClick={() => {
+                  setStatusFilter(active ? null : key);
+                  setShowStatusFilter(false);
+                }}
+                className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-all active:scale-95 ${
+                  active
+                    ? "border-accent bg-accent text-white"
+                    : "border-border bg-card text-muted-dark hover:border-accent/50 hover:text-foreground"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+          {statusFilter && (
             <button
-              onClick={() => setTagFilter(null)}
+              onClick={() => { setStatusFilter(null); setShowStatusFilter(false); }}
               className="text-xs px-2 py-1 rounded-full border border-border text-muted hover:text-foreground transition-colors"
             >
-              ✕ 全て
+              ✕ 解除
             </button>
           )}
+        </div>
+      )}
+
+      {/* Tag filter dropdown */}
+      {showTagFilter && allTags && allTags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
           {allTags.map((t) => {
             const active = tagFilter === t;
             return (
               <button
                 key={t}
-                onClick={() => setTagFilter(active ? null : t)}
+                onClick={() => {
+                  setTagFilter(active ? null : t);
+                  setShowTagFilter(false);
+                }}
                 className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-all active:scale-95 ${
                   active
                     ? "border-accent bg-accent text-white"
@@ -196,6 +244,14 @@ export default function HomePage() {
               </button>
             );
           })}
+          {tagFilter && (
+            <button
+              onClick={() => { setTagFilter(null); setShowTagFilter(false); }}
+              className="text-xs px-2 py-1 rounded-full border border-border text-muted hover:text-foreground transition-colors"
+            >
+              ✕ 解除
+            </button>
+          )}
         </div>
       )}
 
