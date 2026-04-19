@@ -41,8 +41,13 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
   const [memo, setMemo] = useState(initial?.memo ?? "");
   const [tags, setTags] = useState<string[]>(initial?.tags ?? []);
   const [tagInput, setTagInput] = useState("");
+  const [characters, setCharacters] = useState<{ name: string; description: string }[]>(
+    initial?.characters ?? []
+  );
   const [imageBlob, setImageBlob] = useState<Blob | null>(initial?.imageBlob ?? null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 既存の全タグを候補として取得（頻度順）
@@ -117,6 +122,35 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
     img.src = url;
   };
 
+  const fetchAnimeInfo = async () => {
+    if (!title.trim()) return;
+    setAiLoading(true);
+    setAiError(null);
+    try {
+      const res = await fetch("/api/anime-info", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: title.trim() }),
+      });
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      const data = (await res.json()) as {
+        tags: string[];
+        characters: { name: string; description: string }[];
+      };
+      if (data.tags?.length) {
+        setTags((prev) => [...new Set([...prev, ...data.tags])]);
+      }
+      if (data.characters?.length) {
+        setCharacters(data.characters);
+      }
+    } catch (e) {
+      setAiError("AI情報の取得に失敗しました");
+      console.error(e);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
@@ -135,6 +169,7 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
       rating: null,
       memo,
       tags,
+      characters,
       imageBlob,
     });
   };
@@ -180,6 +215,29 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
           className={inputClass}
           required
         />
+        <button
+          type="button"
+          onClick={fetchAnimeInfo}
+          disabled={!title.trim() || aiLoading}
+          className="mt-2 w-full flex items-center justify-center gap-2 text-xs font-bold py-2.5 rounded-xl border border-accent/40 bg-accent-tint text-accent-dark hover:border-accent hover:bg-accent/10 active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none transition-all"
+        >
+          {aiLoading ? (
+            <>
+              <span className="inline-block w-3.5 h-3.5 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
+              AI取得中...
+            </>
+          ) : (
+            <>
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+              </svg>
+              AIでタグ・キャラクターを自動入力
+            </>
+          )}
+        </button>
+        {aiError && (
+          <p className="text-xs text-danger mt-1">{aiError}</p>
+        )}
       </div>
 
       {/* Year & Month */}
@@ -365,6 +423,36 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
           </div>
         )}
       </div>
+
+      {/* Characters */}
+      {characters.length > 0 && (
+        <div>
+          <label className={labelClass}>キャラクター</label>
+          <div className="space-y-2">
+            {characters.map((c, i) => (
+              <div
+                key={i}
+                className="flex items-start gap-2 bg-card border border-border rounded-xl p-2.5 shadow-card"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold">{c.name}</p>
+                  <p className="text-xs text-muted-dark mt-0.5">{c.description}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCharacters(characters.filter((_, j) => j !== i))}
+                  aria-label={`${c.name} を削除`}
+                  className="text-muted hover:text-danger p-0.5 flex-shrink-0"
+                >
+                  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Submit */}
       <button
