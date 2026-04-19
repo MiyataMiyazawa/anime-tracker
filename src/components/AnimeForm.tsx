@@ -34,6 +34,7 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
   const [episodeDuration, setEpisodeDuration] = useState(
     String(initial?.episodeDuration ?? 24)
   );
+  const [unknownDate, setUnknownDate] = useState(initial ? initial.year == null : false);
   const [year, setYear] = useState(String(initial?.year ?? now.getFullYear()));
   const [month, setMonth] = useState(initial?.month ?? now.getMonth() + 1);
   const [status, setStatus] = useState<Anime["status"]>(initial?.status ?? "watching");
@@ -128,8 +129,8 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
       totalEpisodes: totalEp,
       watchedEpisodes: watchedEp,
       episodeDuration: Number(episodeDuration) || 0,
-      year: Number(year) || now.getFullYear(),
-      month,
+      year: unknownDate ? null : (Number(year) || now.getFullYear()),
+      month: unknownDate ? null : month,
       status,
       rating: null,
       memo,
@@ -182,32 +183,49 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
       </div>
 
       {/* Year & Month */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className={labelClass}>年</label>
-          <input
-            type="number"
-            inputMode="numeric"
-            value={year}
-            onChange={(e) => setYear(normalizeNumStr(e.target.value))}
-            onFocus={(e) => e.target.select()}
-            className={inputClass}
-          />
-        </div>
-        <div>
-          <label className={labelClass}>月</label>
-          <select
-            value={month}
-            onChange={(e) => setMonth(Number(e.target.value))}
-            className={inputClass}
+      <div>
+        <div className="flex items-center justify-between mb-1.5">
+          <span className={labelClass + " !mb-0"}>視聴時期</span>
+          <button
+            type="button"
+            onClick={() => setUnknownDate(!unknownDate)}
+            className={`text-xs font-medium px-3 py-1 rounded-full border transition-all active:scale-95 ${
+              unknownDate
+                ? "border-accent bg-accent text-white"
+                : "border-border bg-card text-muted-dark hover:border-accent/50"
+            }`}
           >
-            {Array.from({ length: 12 }, (_, i) => (
-              <option key={i + 1} value={i + 1}>
-                {i + 1}月
-              </option>
-            ))}
-          </select>
+            時期不明
+          </button>
         </div>
+        {!unknownDate && (
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <input
+                type="number"
+                inputMode="numeric"
+                value={year}
+                onChange={(e) => setYear(normalizeNumStr(e.target.value))}
+                onFocus={(e) => e.target.select()}
+                placeholder="年"
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <select
+                value={month}
+                onChange={(e) => setMonth(Number(e.target.value))}
+                className={inputClass}
+              >
+                {Array.from({ length: 12 }, (_, i) => (
+                  <option key={i + 1} value={i + 1}>
+                    {i + 1}月
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Episodes */}

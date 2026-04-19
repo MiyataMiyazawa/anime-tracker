@@ -6,8 +6,8 @@ export interface Anime {
   totalEpisodes: number;
   watchedEpisodes: number;
   episodeDuration: number; // minutes per episode
-  year: number;
-  month: number; // 1-12
+  year: number | null;
+  month: number | null; // 1-12, null = 時期不明
   status: "watching" | "completed" | "dropped" | "planned";
   rating: number | null; // 1-10
   memo: string;
