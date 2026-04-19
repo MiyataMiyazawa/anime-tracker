@@ -14,11 +14,10 @@ export default function HomePage() {
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
-  const [showUnknownDate, setShowUnknownDate] = useState(false);
 
   const query = search.trim().toLowerCase();
   const isSearching = query.length > 0;
-  const isFiltering = isSearching || tagFilter !== null || statusFilter !== null || showAll || showUnknownDate;
+  const isFiltering = isSearching || tagFilter !== null || statusFilter !== null || showAll;
 
   // 全タグ一覧（頻度順）
   const allTags = useLiveQuery(async () => {
@@ -46,12 +45,9 @@ export default function HomePage() {
           : db.anime.where("status").equals(statusFilter);
       }
       const all = await collection.toArray();
-      let filtered = showUnknownDate
-        ? all.filter((a) => a.year == null)
+      const filtered = isSearching
+        ? all.filter((a) => a.title.toLowerCase().includes(query))
         : all;
-      filtered = isSearching
-        ? filtered.filter((a) => a.title.toLowerCase().includes(query))
-        : filtered;
       return filtered.sort((a, b) => {
         const ay = a.year ?? -1;
         const by = b.year ?? -1;
@@ -61,7 +57,7 @@ export default function HomePage() {
       });
     }
     return db.anime.where({ year, month }).toArray();
-  }, [year, month, isFiltering, isSearching, query, tagFilter, statusFilter, showUnknownDate]);
+  }, [year, month, isFiltering, isSearching, query, tagFilter, statusFilter]);
 
   const monthStats =
     !isFiltering && animeList
@@ -138,7 +134,7 @@ export default function HomePage() {
         <button
           onClick={() => {
             setShowAll(!showAll);
-            if (!showAll) { setStatusFilter(null); setTagFilter(null); setSearch(""); setShowUnknownDate(false); }
+            if (!showAll) { setStatusFilter(null); setTagFilter(null); setSearch(""); }
           }}
           className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-all active:scale-95 ${
             showAll
@@ -147,19 +143,6 @@ export default function HomePage() {
           }`}
         >
           全て
-        </button>
-        <button
-          onClick={() => {
-            setShowUnknownDate(!showUnknownDate);
-            if (!showUnknownDate) { setShowAll(false); setStatusFilter(null); setTagFilter(null); setSearch(""); }
-          }}
-          className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-all active:scale-95 ${
-            showUnknownDate
-              ? "border-accent bg-accent text-white"
-              : "border-border bg-card text-muted-dark hover:border-accent/50 hover:text-foreground"
-          }`}
-        >
-          時期不明
         </button>
         {(
           [
@@ -259,7 +242,6 @@ export default function HomePage() {
       {isFiltering && animeList && (
         <p className="text-xs text-muted">
           {animeList.length}件ヒット
-          {showUnknownDate && <span className="ml-1">（時期不明）</span>}
           {statusFilter && <span className="ml-1">（{
             { watching: "視聴中", completed: "完了", planned: "予定", dropped: "中断" }[statusFilter]
           }）</span>}
