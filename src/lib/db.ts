@@ -12,6 +12,7 @@ export interface Anime {
   rating: number | null; // 1-10
   memo: string;
   tags: string[];
+  characters: { name: string; description: string }[];
   imageBlob: Blob | null;
   createdAt: Date;
   updatedAt: Date;
@@ -74,6 +75,23 @@ db.version(4)
         });
       }
     }
+  });
+
+// v5: characters フィールド追加。既存レコードに空配列をバックフィル
+db.version(5)
+  .stores({
+    anime: "++id, &title, year, month, status, [year+month], *tags",
+    episodes: "++id, animeId, [animeId+number]",
+  })
+  .upgrade(async (tx) => {
+    await tx
+      .table<Anime>("anime")
+      .toCollection()
+      .modify((a) => {
+        if (!Array.isArray(a.characters)) {
+          a.characters = [];
+        }
+      });
   });
 
 // --- helpers ---
