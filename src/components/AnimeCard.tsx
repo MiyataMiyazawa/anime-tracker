@@ -216,7 +216,9 @@ export default function AnimeCard({
               </div>
               {showDate && (
                 <p className="text-[10px] text-muted-dark mt-0.5 font-medium">
-                  {anime.year}年{anime.month}月
+                  {anime.year != null && anime.month != null
+                    ? `${anime.year}年${anime.month}月`
+                    : "時期不明"}
                 </p>
               )}
 

@@ -48,9 +48,13 @@ export default function HomePage() {
       const filtered = isSearching
         ? all.filter((a) => a.title.toLowerCase().includes(query))
         : all;
-      return filtered.sort(
-        (a, b) => b.year - a.year || b.month - a.month || b.id - a.id
-      );
+      return filtered.sort((a, b) => {
+        const ay = a.year ?? -1;
+        const by = b.year ?? -1;
+        const am = a.month ?? -1;
+        const bm = b.month ?? -1;
+        return by - ay || bm - am || b.id - a.id;
+      });
     }
     return db.anime.where({ year, month }).toArray();
   }, [year, month, isFiltering, isSearching, query, tagFilter, statusFilter]);

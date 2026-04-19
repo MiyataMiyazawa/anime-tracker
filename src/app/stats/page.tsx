@@ -27,6 +27,7 @@ export default function StatsPage() {
     { count: number; episodes: number; minutes: number }
   >();
   for (const a of allAnime) {
+    if (a.year == null || a.month == null) continue;
     const key = `${a.year}-${String(a.month).padStart(2, "0")}`;
     const current = monthlyMap.get(key) ?? {
       count: 0,
