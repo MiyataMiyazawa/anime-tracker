@@ -9,6 +9,7 @@ import {
 } from "@/lib/db";
 import AnimeForm from "@/components/AnimeForm";
 import type { Anime } from "@/lib/db";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function AnimeEditPage({
   params,
@@ -19,6 +20,7 @@ export default function AnimeEditPage({
   const router = useRouter();
   const [anime, setAnime] = useState<Anime | null>(null);
   const [loading, setLoading] = useState(true);
+  const { syncAnime, deleteAnimeCloud } = useAuth();
 
   useEffect(() => {
     db.anime.get(Number(id)).then((a) => {
@@ -36,12 +38,17 @@ export default function AnimeEditPage({
       updatedAt: new Date(),
     });
     await syncEpisodes(animeId, data.totalEpisodes);
+    // クラウドに同期
+    await syncAnime(animeId);
     router.push(`/anime/${id}`);
   };
 
   const handleDelete = async () => {
     if (confirm("このアニメを削除しますか？（エピソード記録も全て消えます）")) {
-      await deleteAnimeWithEpisodes(Number(id));
+      const animeId = Number(id);
+      await deleteAnimeWithEpisodes(animeId);
+      // クラウドからも削除
+      await deleteAnimeCloud(animeId);
       router.push("/");
     }
   };
