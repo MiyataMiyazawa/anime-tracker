@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { db, createInitialEpisodes } from "@/lib/db";
 import AnimeForm from "@/components/AnimeForm";
 import type { Anime } from "@/lib/db";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function AddPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const { syncAnime } = useAuth();
 
   const handleSubmit = async (
     data: Omit<Anime, "id" | "createdAt" | "updatedAt">
@@ -38,6 +40,9 @@ export default function AddPage() {
       data.totalEpisodes,
       data.watchedEpisodes
     );
+
+    // クラウドに同期
+    await syncAnime(Number(newId));
 
     router.push("/");
   };

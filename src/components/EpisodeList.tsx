@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db, toggleEpisode, updateEpisodeMemo } from "@/lib/db";
+import { useAuth } from "./AuthProvider";
 
 export default function EpisodeList({ animeId }: { animeId: number }) {
+  const { syncAnime } = useAuth();
   const episodes = useLiveQuery(
     () =>
       db.episodes
@@ -30,12 +32,14 @@ export default function EpisodeList({ animeId }: { animeId: number }) {
 
   const watchedCount = episodes.filter((e) => e.watchedAt).length;
 
-  const handleToggle = (episodeId: number) => {
-    toggleEpisode(episodeId);
+  const handleToggle = async (episodeId: number) => {
+    await toggleEpisode(episodeId);
+    syncAnime(animeId);
   };
 
-  const handleMemoBlur = (episodeId: number, value: string) => {
-    updateEpisodeMemo(episodeId, value);
+  const handleMemoBlur = async (episodeId: number, value: string) => {
+    await updateEpisodeMemo(episodeId, value);
+    syncAnime(animeId);
   };
 
   return (

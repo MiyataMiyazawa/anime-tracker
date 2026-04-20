@@ -5,8 +5,11 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db, markNextEpisodeWatched, unmarkLastEpisodeWatched } from "@/lib/db";
 import AnimeCard from "@/components/AnimeCard";
 import MonthSelector from "@/components/MonthSelector";
+import UserMenu from "@/components/UserMenu";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function HomePage() {
+  const { syncAnime } = useAuth();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -75,11 +78,14 @@ export default function HomePage() {
 
   return (
     <div className="space-y-6">
-      <div className="pt-1">
-        <p className="label-eyebrow">your library</p>
-        <h1 className="text-3xl font-black tracking-tight brand-text mt-1">
-          Anime Tracker
-        </h1>
+      <div className="pt-1 flex items-start justify-between">
+        <div>
+          <p className="label-eyebrow">your library</p>
+          <h1 className="text-3xl font-black tracking-tight brand-text mt-1">
+            Anime Tracker
+          </h1>
+        </div>
+        <UserMenu />
       </div>
 
       {/* Search bar */}
@@ -329,8 +335,14 @@ export default function HomePage() {
               key={anime.id}
               anime={anime}
               showDate={isFiltering}
-              onIncrement={() => markNextEpisodeWatched(anime.id)}
-              onDecrement={() => unmarkLastEpisodeWatched(anime.id)}
+              onIncrement={async () => {
+                await markNextEpisodeWatched(anime.id);
+                syncAnime(anime.id);
+              }}
+              onDecrement={async () => {
+                await unmarkLastEpisodeWatched(anime.id);
+                syncAnime(anime.id);
+              }}
             />
           ))}
         </div>
