@@ -132,20 +132,25 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: title.trim() }),
       });
-      if (!res.ok) throw new Error(`API error: ${res.status}`);
       const data = (await res.json()) as {
-        tags: string[];
-        characters: { name: string; description: string }[];
+        tags?: string[];
+        characters?: { name: string; description: string }[];
+        error?: string;
       };
-      if (data.tags?.length) {
-        setTags((prev) => [...new Set([...prev, ...data.tags])]);
+      if (!res.ok) {
+        setAiError(data.error ?? "AI情報の取得に失敗しました");
+        return;
       }
-      if (data.characters?.length) {
+      if (data.tags && data.tags.length) {
+        const newTags = data.tags;
+        setTags((prev) => [...new Set([...prev, ...newTags])]);
+      }
+      if (data.characters && data.characters.length) {
         setCharacters(data.characters);
       }
     } catch (e) {
-      setAiError("AI情報の取得に失敗しました");
-      console.error(e);
+      setAiError("ネットワークエラーが発生しました。通信状況を確認してください");
+      console.error("[AnimeForm] fetchAnimeInfo error:", e);
     } finally {
       setAiLoading(false);
     }
