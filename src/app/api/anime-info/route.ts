@@ -47,8 +47,19 @@ export async function POST(request: NextRequest) {
 
     if (!res.ok) {
       const err = await res.text();
+      console.error(`[anime-info] Gemini API error: status=${res.status} title="${title.trim()}" body=${err}`);
+
+      let userMessage = "AI情報の取得に失敗しました";
+      if (res.status === 429) {
+        userMessage = "リクエスト制限に達しました。少し待ってから再試行してください";
+      } else if (res.status === 503) {
+        userMessage = "Gemini APIが一時的に利用できません。しばらくしてから再試行してください";
+      } else if (res.status === 404) {
+        userMessage = "Gemini APIのモデルが見つかりません。設定を確認してください";
+      }
+
       return Response.json(
-        { error: `Gemini API error: ${res.status}`, detail: err },
+        { error: userMessage, status: res.status },
         { status: 502 }
       );
     }
@@ -60,8 +71,9 @@ export async function POST(request: NextRequest) {
     // Extract JSON from response (might be wrapped in ```json ... ```)
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
+      console.error(`[anime-info] JSON parse failed: title="${title.trim()}" raw=${text}`);
       return Response.json(
-        { error: "Failed to parse Gemini response", raw: text },
+        { error: "AIの応答を解析できませんでした。再試行してください" },
         { status: 502 }
       );
     }
@@ -76,8 +88,9 @@ export async function POST(request: NextRequest) {
       characters: (parsed.characters ?? []).slice(0, 5),
     });
   } catch (e) {
+    console.error(`[anime-info] Unexpected error: title="${title.trim()}"`, e);
     return Response.json(
-      { error: "Internal error", detail: String(e) },
+      { error: "予期しないエラーが発生しました" },
       { status: 500 }
     );
   }
