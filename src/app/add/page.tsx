@@ -10,41 +10,47 @@ import { useAuth } from "@/components/AuthProvider";
 export default function AddPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const { syncAnime } = useAuth();
 
   const handleSubmit = async (
     data: Omit<Anime, "id" | "createdAt" | "updatedAt">
   ) => {
     setError(null);
+    setSubmitting(true);
 
-    const existing = await db.anime
-      .where("title")
-      .equalsIgnoreCase(data.title)
-      .first();
+    try {
+      const existing = await db.anime
+        .where("title")
+        .equalsIgnoreCase(data.title)
+        .first();
 
-    if (existing) {
-      setError(`「${data.title}」は既に登録されています`);
-      return;
+      if (existing) {
+        setError(`「${data.title}」は既に登録されています`);
+        return;
+      }
+
+      const now = new Date();
+      const newId = await db.anime.add({
+        ...data,
+        createdAt: now,
+        updatedAt: now,
+      } as Anime);
+
+      // 初期 episodes を生成（先頭 watchedEpisodes 個を視聴済みに）
+      await createInitialEpisodes(
+        Number(newId),
+        data.totalEpisodes,
+        data.watchedEpisodes
+      );
+
+      // クラウドに同期
+      await syncAnime(Number(newId));
+
+      router.push("/");
+    } finally {
+      setSubmitting(false);
     }
-
-    const now = new Date();
-    const newId = await db.anime.add({
-      ...data,
-      createdAt: now,
-      updatedAt: now,
-    } as Anime);
-
-    // 初期 episodes を生成（先頭 watchedEpisodes 個を視聴済みに）
-    await createInitialEpisodes(
-      Number(newId),
-      data.totalEpisodes,
-      data.watchedEpisodes
-    );
-
-    // クラウドに同期
-    await syncAnime(Number(newId));
-
-    router.push("/");
   };
 
   return (
@@ -58,7 +64,7 @@ export default function AddPage() {
           {error}
         </div>
       )}
-      <AnimeForm onSubmit={handleSubmit} />
+      <AnimeForm onSubmit={handleSubmit} submitting={submitting} />
     </div>
   );
 }

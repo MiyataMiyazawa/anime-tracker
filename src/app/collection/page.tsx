@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
@@ -22,12 +22,29 @@ const statusChip: Record<Anime["status"], string> = {
 
 function CardImage({ anime }: { anime: Anime }) {
   const [url, setUrl] = useState<string | null>(null);
+  const prevBlobSize = useRef<number | null>(null);
 
   useEffect(() => {
     if (anime.imageBlob) {
+      // Blobのサイズが同じなら中身は変わっていないのでURL再生成をスキップ
+      if (prevBlobSize.current === anime.imageBlob.size && url) {
+        return;
+      }
+      prevBlobSize.current = anime.imageBlob.size;
       const u = URL.createObjectURL(anime.imageBlob);
-      setUrl(u);
-      return () => URL.revokeObjectURL(u);
+      setUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return u;
+      });
+      return () => {
+        URL.revokeObjectURL(u);
+      };
+    } else {
+      prevBlobSize.current = null;
+      setUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return null;
+      });
     }
   }, [anime.imageBlob]);
 

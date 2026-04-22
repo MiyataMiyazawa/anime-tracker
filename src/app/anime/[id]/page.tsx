@@ -1,7 +1,9 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
 import EpisodeList from "@/components/EpisodeList";
 import type { Anime } from "@/lib/db";
@@ -26,26 +28,36 @@ export default function AnimeDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const [anime, setAnime] = useState<Anime | null>(null);
+  const router = useRouter();
+  const anime = useLiveQuery(() => db.anime.get(Number(id)), [id]);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    db.anime.get(Number(id)).then((a) => {
-      setAnime(a ?? null);
-      setLoading(false);
-    });
-  }, [id]);
+  const prevBlobSize = useRef<number | null>(null);
 
   useEffect(() => {
     if (anime?.imageBlob) {
+      // Blobのサイズが同じなら中身は変わっていないのでURL再生成をスキップ
+      if (prevBlobSize.current === anime.imageBlob.size && imageUrl) {
+        return;
+      }
+      prevBlobSize.current = anime.imageBlob.size;
       const url = URL.createObjectURL(anime.imageBlob);
-      setImageUrl(url);
-      return () => URL.revokeObjectURL(url);
+      setImageUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return url;
+      });
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    } else {
+      prevBlobSize.current = null;
+      setImageUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return null;
+      });
     }
   }, [anime?.imageBlob]);
 
-  if (loading) {
+  if (anime === undefined) {
     return <div className="text-center text-muted py-12">読み込み中...</div>;
   }
 
@@ -63,9 +75,20 @@ export default function AnimeDetailPage({
 
   return (
     <div className="space-y-5">
+      {/* Back button */}
+      <button
+        onClick={() => router.back()}
+        className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl border border-border bg-card text-muted-dark hover:border-accent hover:text-accent active:scale-95 transition-all shadow-card"
+      >
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+        </svg>
+        戻る
+      </button>
+
       {/* Header image */}
       {imageUrl && (
-        <div className="w-full h-52 -mx-4 -mt-4 overflow-hidden relative" style={{ width: "calc(100% + 2rem)" }}>
+        <div className="w-full h-52 -mx-4 overflow-hidden relative" style={{ width: "calc(100% + 2rem)" }}>
           <img src={imageUrl} alt={anime.title} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
         </div>

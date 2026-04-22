@@ -11,6 +11,7 @@ interface AnimeFormProps {
   initial?: Anime;
   onSubmit: (data: AnimeFormData) => void;
   onDelete?: () => void;
+  submitting?: boolean;
 }
 
 // 数値入力で先頭ゼロ等が残らないよう正規化する（空文字は空文字のまま保持）
@@ -22,7 +23,7 @@ const normalizeNumStr = (s: string) => {
   return String(n);
 };
 
-export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProps) {
+export default function AnimeForm({ initial, onSubmit, onDelete, submitting }: AnimeFormProps) {
   const now = new Date();
   const [title, setTitle] = useState(initial?.title ?? "");
   const [totalEpisodes, setTotalEpisodes] = useState(
@@ -171,7 +172,6 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
       year: unknownDate ? null : (Number(year) || now.getFullYear()),
       month: unknownDate ? null : month,
       status,
-      rating: null,
       memo,
       tags,
       characters,
@@ -186,19 +186,37 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Image */}
-      <div
-        onClick={() => fileInputRef.current?.click()}
-        className="w-full h-44 bg-card border-2 border-border border-dashed rounded-2xl flex items-center justify-center cursor-pointer hover:border-accent hover:bg-accent-tint transition-all overflow-hidden shadow-card"
-      >
-        {imagePreview ? (
-          <img src={imagePreview} alt="preview" className="w-full h-full object-cover" />
-        ) : (
-          <div className="text-center text-muted">
-            <svg className="mx-auto mb-2" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+      <div className="relative">
+        <div
+          onClick={() => fileInputRef.current?.click()}
+          className="w-full h-44 bg-card border-2 border-border border-dashed rounded-2xl flex items-center justify-center cursor-pointer hover:border-accent hover:bg-accent-tint transition-all overflow-hidden shadow-card"
+        >
+          {imagePreview ? (
+            <img src={imagePreview} alt="preview" className="w-full h-full object-cover" />
+          ) : (
+            <div className="text-center text-muted">
+              <svg className="mx-auto mb-2" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+              </svg>
+              <p className="text-xs">タップして画像を追加</p>
+            </div>
+          )}
+        </div>
+        {imagePreview && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setImageBlob(null);
+              setImagePreview(null);
+            }}
+            className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 active:scale-90 transition-all"
+            aria-label="画像を削除"
+          >
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
-            <p className="text-xs">タップして画像を追加</p>
-          </div>
+          </button>
         )}
       </div>
       <input
@@ -462,9 +480,17 @@ export default function AnimeForm({ initial, onSubmit, onDelete }: AnimeFormProp
       {/* Submit */}
       <button
         type="submit"
-        className="w-full bg-brand text-white font-bold py-3.5 rounded-xl shadow-hero hover:brightness-110 active:scale-[0.98] transition-all tracking-tight"
+        disabled={submitting}
+        className="w-full bg-brand text-white font-bold py-3.5 rounded-xl shadow-hero hover:brightness-110 active:scale-[0.98] transition-all tracking-tight disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
       >
-        {initial ? "更新する" : "追加する"}
+        {submitting ? (
+          <>
+            <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            処理中...
+          </>
+        ) : (
+          initial ? "更新する" : "追加する"
+        )}
       </button>
 
       {/* Delete */}
