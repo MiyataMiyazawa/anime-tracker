@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db, markNextEpisodeWatched, unmarkLastEpisodeWatched } from "@/lib/db";
 import AnimeCard from "@/components/AnimeCard";
@@ -11,8 +11,25 @@ import { useAuth } from "@/components/AuthProvider";
 export default function HomePage() {
   const { syncAnime } = useAuth();
   const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth() + 1);
+  const [year, setYear] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = sessionStorage.getItem("home-year");
+      if (saved) return Number(saved);
+    }
+    return now.getFullYear();
+  });
+  const [month, setMonth] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = sessionStorage.getItem("home-month");
+      if (saved) return Number(saved);
+    }
+    return now.getMonth() + 1;
+  });
+  useEffect(() => {
+    sessionStorage.setItem("home-year", String(year));
+    sessionStorage.setItem("home-month", String(month));
+  }, [year, month]);
+
   const [search, setSearch] = useState("");
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
