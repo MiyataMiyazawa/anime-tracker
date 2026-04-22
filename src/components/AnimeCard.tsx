@@ -34,6 +34,7 @@ export default function AnimeCard({
   onDecrement?: () => void;
 }) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const prevBlobSize = useRef<number | null>(null);
   const [offsetX, setOffsetX] = useState(0);
   const [feedbackText, setFeedbackText] = useState<string | null>(null);
   const touchStartX = useRef(0);
@@ -43,9 +44,26 @@ export default function AnimeCard({
 
   useEffect(() => {
     if (anime.imageBlob) {
+      // Blobのサイズが同じなら中身は変わっていないのでURL再生成をスキップ
+      if (prevBlobSize.current === anime.imageBlob.size && imageUrl) {
+        return;
+      }
+      prevBlobSize.current = anime.imageBlob.size;
       const url = URL.createObjectURL(anime.imageBlob);
-      setImageUrl(url);
-      return () => URL.revokeObjectURL(url);
+      setImageUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return url;
+      });
+      return () => {
+        // アンマウント時のみ破棄（setImageUrl内で破棄済みの場合は二重破棄になるがブラウザは安全に無視する）
+        URL.revokeObjectURL(url);
+      };
+    } else {
+      prevBlobSize.current = null;
+      setImageUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return null;
+      });
     }
   }, [anime.imageBlob]);
 
