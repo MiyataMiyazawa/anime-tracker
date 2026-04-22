@@ -26,6 +26,8 @@ interface AuthContextValue {
   user: User | null;
   loading: boolean;
   syncStatus: SyncStatus;
+  isOnline: boolean;
+  requiresOnline: boolean; // ログイン中かつオフライン = true
   logout: () => Promise<void>;
   syncAnime: (animeId: number) => Promise<void>;
   deleteAnimeCloud: (animeId: number) => Promise<void>;
@@ -35,6 +37,8 @@ const AuthContext = createContext<AuthContextValue>({
   user: null,
   loading: true,
   syncStatus: "idle",
+  isOnline: true,
+  requiresOnline: false,
   logout: async () => {},
   syncAnime: async () => {},
   deleteAnimeCloud: async () => {},
@@ -45,6 +49,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
   const [initialSyncDone, setInitialSyncDone] = useState(false);
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== "undefined" ? navigator.onLine : true
+  );
+
+  useEffect(() => {
+    const goOnline = () => setIsOnline(true);
+    const goOffline = () => setIsOnline(false);
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
+    return () => {
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
+    };
+  }, []);
+
+  const requiresOnline = !!user && !isOnline;
 
   // 初回ログイン時の同期
   useEffect(() => {
@@ -116,7 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, syncStatus, logout, syncAnime, deleteAnimeCloud }}
+      value={{ user, loading, syncStatus, isOnline, requiresOnline, logout, syncAnime, deleteAnimeCloud }}
     >
       {children}
     </AuthContext.Provider>

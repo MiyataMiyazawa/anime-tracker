@@ -6,7 +6,7 @@ import { db, toggleEpisode, updateEpisodeMemo } from "@/lib/db";
 import { useAuth } from "./AuthProvider";
 
 export default function EpisodeList({ animeId }: { animeId: number }) {
-  const { syncAnime } = useAuth();
+  const { syncAnime, requiresOnline } = useAuth();
   const episodes = useLiveQuery(
     () =>
       db.episodes
@@ -17,6 +17,7 @@ export default function EpisodeList({ animeId }: { animeId: number }) {
   );
   const [expanded, setExpanded] = useState<number | null>(null);
   const [memoDraft, setMemoDraft] = useState<Record<number, string>>({});
+  const [offlineWarning, setOfflineWarning] = useState(false);
 
   if (!episodes) {
     return <p className="text-center text-muted text-sm py-4">読み込み中...</p>;
@@ -33,17 +34,28 @@ export default function EpisodeList({ animeId }: { animeId: number }) {
   const watchedCount = episodes.filter((e) => e.watchedAt).length;
 
   const handleToggle = async (episodeId: number) => {
+    if (requiresOnline) {
+      setOfflineWarning(true);
+      setTimeout(() => setOfflineWarning(false), 3000);
+      return;
+    }
     await toggleEpisode(episodeId);
     syncAnime(animeId);
   };
 
   const handleMemoBlur = async (episodeId: number, value: string) => {
+    if (requiresOnline) return;
     await updateEpisodeMemo(episodeId, value);
     syncAnime(animeId);
   };
 
   return (
     <div className="space-y-3">
+      {offlineWarning && (
+        <div className="bg-warning/10 border border-warning/30 text-warning text-xs font-bold px-3 py-2 rounded-xl">
+          オフラインのため操作できません
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-bold">エピソード</h2>
         <p className="text-xs text-muted">

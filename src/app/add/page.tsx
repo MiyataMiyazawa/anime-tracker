@@ -11,7 +11,7 @@ export default function AddPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const { syncAnime } = useAuth();
+  const { syncAnime, requiresOnline } = useAuth();
 
   const handleSubmit = async (
     data: Omit<Anime, "id" | "createdAt" | "updatedAt">
@@ -59,12 +59,17 @@ export default function AddPage() {
         <p className="label-eyebrow">new entry</p>
         <h1 className="text-3xl font-black tracking-tight mt-1">アニメを追加</h1>
       </div>
+      {requiresOnline && (
+        <div className="bg-warning/10 border border-warning/30 text-warning text-sm px-4 py-3 rounded-xl">
+          オフラインのため操作できません。ネットワークに接続してください。
+        </div>
+      )}
       {error && (
         <div className="bg-danger/10 border border-danger/30 text-danger text-sm px-4 py-3 rounded-xl">
           {error}
         </div>
       )}
-      <AnimeForm onSubmit={handleSubmit} submitting={submitting} />
+      <AnimeForm onSubmit={handleSubmit} submitting={submitting || requiresOnline} />
     </div>
   );
 }

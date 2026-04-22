@@ -22,7 +22,7 @@ export default function AnimeEditPage({
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const { syncAnime, deleteAnimeCloud } = useAuth();
+  const { syncAnime, deleteAnimeCloud, requiresOnline } = useAuth();
 
   useEffect(() => {
     db.anime.get(Number(id)).then((a) => {
@@ -76,11 +76,16 @@ export default function AnimeEditPage({
         <p className="label-eyebrow">edit</p>
         <h1 className="text-3xl font-black tracking-tight mt-1 truncate">{anime.title}</h1>
       </div>
+      {requiresOnline && (
+        <div className="bg-warning/10 border border-warning/30 text-warning text-sm px-4 py-3 rounded-xl">
+          オフラインのため操作できません。ネットワークに接続してください。
+        </div>
+      )}
       <AnimeForm
         initial={anime}
         onSubmit={handleSubmit}
-        onDelete={handleDelete}
-        submitting={submitting}
+        onDelete={requiresOnline ? undefined : handleDelete}
+        submitting={submitting || requiresOnline}
       />
 
       {/* Delete confirmation modal */}

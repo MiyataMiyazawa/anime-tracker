@@ -9,7 +9,8 @@ import UserMenu from "@/components/UserMenu";
 import { useAuth } from "@/components/AuthProvider";
 
 export default function HomePage() {
-  const { syncAnime } = useAuth();
+  const { syncAnime, requiresOnline } = useAuth();
+  const [offlineWarning, setOfflineWarning] = useState(false);
   const now = new Date();
   const [year, setYear] = useState(() => {
     if (typeof window !== "undefined") {
@@ -104,6 +105,13 @@ export default function HomePage() {
         </div>
         <UserMenu />
       </div>
+
+      {/* Offline warning toast */}
+      {offlineWarning && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-warning/90 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg animate-[fade-out_3s_ease-out_forwards]">
+          オフラインのため操作できません
+        </div>
+      )}
 
       {/* Search bar */}
       <div className="relative">
@@ -352,11 +360,17 @@ export default function HomePage() {
               key={anime.id}
               anime={anime}
               showDate={isFiltering}
-              onIncrement={async () => {
+              onIncrement={requiresOnline ? () => {
+                setOfflineWarning(true);
+                setTimeout(() => setOfflineWarning(false), 3000);
+              } : async () => {
                 await markNextEpisodeWatched(anime.id);
                 syncAnime(anime.id);
               }}
-              onDecrement={async () => {
+              onDecrement={requiresOnline ? () => {
+                setOfflineWarning(true);
+                setTimeout(() => setOfflineWarning(false), 3000);
+              } : async () => {
                 await unmarkLastEpisodeWatched(anime.id);
                 syncAnime(anime.id);
               }}
