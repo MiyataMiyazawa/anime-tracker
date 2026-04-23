@@ -120,7 +120,7 @@ export default function HomePage() {
 
       {/* Offline warning toast */}
       {offlineWarning && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-warning/90 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg animate-[fade-out_3s_ease-out_forwards]">
+        <div className="fixed left-1/2 -translate-x-1/2 z-50 bg-warning/90 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg animate-[fade-out_3s_ease-out_forwards]" style={{ top: "calc(1rem + env(safe-area-inset-top, 0px))" }}>
           オフラインのため操作できません
         </div>
       )}

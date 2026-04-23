@@ -14,7 +14,7 @@ export default function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 px-4" style={{ paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom, 0px))" }}>
+    <div className="fixed bottom-0 left-0 right-0 z-50 px-4" style={{ paddingBottom: pathname === "/" ? "0.5rem" : "calc(0.5rem + env(safe-area-inset-bottom, 0px))" }}>
       <nav className="max-w-lg mx-auto bg-card/70 backdrop-blur-2xl border border-border/50 rounded-3xl shadow-lg">
         <div className="flex justify-around items-center h-14 px-2">
           {navItems.map((item) => {

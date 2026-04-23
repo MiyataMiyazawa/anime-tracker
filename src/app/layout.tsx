@@ -47,7 +47,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col" style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}>
         <AuthProvider>
           <ToastProvider />
-          <main className="flex-1 max-w-lg mx-auto w-full px-4 py-6">
+          <main className="flex-1 max-w-lg mx-auto w-full px-4 pb-6" style={{ paddingTop: "calc(1.5rem + env(safe-area-inset-top, 0px))" }}>
             {children}
           </main>
           <BottomNav />
