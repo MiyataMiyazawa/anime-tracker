@@ -1,6 +1,6 @@
 # Anime Tracker
 
-アニメの視聴進捗（話数・視聴時間・評価・ステータス）を月別に管理するPWA（Progressive Web App）。
+アニメの視聴進捗（話数・視聴時間・ステータス）を月別に管理するPWA（Progressive Web App）。
 オフラインファーストで動作し、Googleアカウントによるクラウド同期にも対応。
 
 ## 主な機能
@@ -111,7 +111,6 @@ Dexie（IndexedDB）がプライマリストレージ。ネットワークなし
 | year | number \| null | 放送年 |
 | month | number \| null | 放送月（1-12） |
 | status | string | `watching` / `completed` / `dropped` / `planned` |
-| rating | number \| null | 評価（1-10） |
 | memo | string | メモ |
 | tags | string[] | タグ（複数エントリインデックス） |
 | characters | object[] | キャラクター情報 `{ name, description }` |
