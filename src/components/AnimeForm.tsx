@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
 import type { Anime } from "@/lib/db";
@@ -50,6 +50,47 @@ export default function AnimeForm({ initial, onSubmit, onDelete, submitting }: A
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const submittedRef = useRef(false);
+
+  // Dirty check: compare current values against initial values
+  const isDirty = useCallback(() => {
+    if (submittedRef.current) return false;
+    const i = initial;
+    if (!i) {
+      // New form — dirty if any field has been touched away from defaults
+      return (
+        title !== "" ||
+        memo !== "" ||
+        tags.length > 0 ||
+        characters.length > 0 ||
+        imageBlob !== null ||
+        status !== "watching" ||
+        String(totalEpisodes) !== "12" ||
+        String(watchedEpisodes) !== "0" ||
+        String(episodeDuration) !== "24"
+      );
+    }
+    return (
+      title !== (i.title ?? "") ||
+      memo !== (i.memo ?? "") ||
+      status !== (i.status ?? "watching") ||
+      String(totalEpisodes) !== String(i.totalEpisodes ?? 12) ||
+      String(episodeDuration) !== String(i.episodeDuration ?? 24) ||
+      JSON.stringify(tags) !== JSON.stringify(i.tags ?? []) ||
+      JSON.stringify(characters) !== JSON.stringify(i.characters ?? [])
+    );
+  }, [title, memo, status, totalEpisodes, episodeDuration, tags, characters, imageBlob, initial, watchedEpisodes]);
+
+  // Warn before navigating away with unsaved changes
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty()) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
 
   // 既存の全タグを候補として取得（頻度順）
   const allTags = useLiveQuery(async () => {
@@ -160,6 +201,7 @@ export default function AnimeForm({ initial, onSubmit, onDelete, submitting }: A
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
+    submittedRef.current = true;
 
     const totalEp = Number(totalEpisodes) || 0;
     const watchedEp = Math.min(Number(watchedEpisodes) || 0, totalEp);

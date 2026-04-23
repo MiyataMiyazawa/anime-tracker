@@ -47,6 +47,7 @@ export default function AddPage() {
       // クラウドに同期
       await syncAnime(Number(newId));
 
+      sessionStorage.setItem("toast", "アニメを追加しました");
       router.push("/");
     } finally {
       setSubmitting(false);

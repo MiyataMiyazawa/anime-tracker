@@ -18,6 +18,7 @@ export default function EpisodeList({ animeId }: { animeId: number }) {
   const [expanded, setExpanded] = useState<number | null>(null);
   const [memoDraft, setMemoDraft] = useState<Record<number, string>>({});
   const [offlineWarning, setOfflineWarning] = useState(false);
+  const [listExpanded, setListExpanded] = useState(false);
 
   if (!episodes) {
     return <p className="text-center text-muted text-sm py-4">読み込み中...</p>;
@@ -32,6 +33,11 @@ export default function EpisodeList({ animeId }: { animeId: number }) {
   }
 
   const watchedCount = episodes.filter((e) => e.watchedAt).length;
+  const COLLAPSE_THRESHOLD = 12;
+  const shouldCollapse = episodes.length > COLLAPSE_THRESHOLD;
+  const visibleEpisodes = shouldCollapse && !listExpanded
+    ? episodes.slice(0, COLLAPSE_THRESHOLD)
+    : episodes;
 
   const handleToggle = async (episodeId: number) => {
     if (requiresOnline) {
@@ -64,7 +70,7 @@ export default function EpisodeList({ animeId }: { animeId: number }) {
       </div>
 
       <ul className="space-y-1.5">
-        {episodes.map((ep) => {
+        {visibleEpisodes.map((ep) => {
           const isWatched = ep.watchedAt !== null;
           const isOpen = expanded === ep.id;
           const draft = memoDraft[ep.id] ?? ep.memo;
@@ -174,6 +180,16 @@ export default function EpisodeList({ animeId }: { animeId: number }) {
           );
         })}
       </ul>
+
+      {shouldCollapse && (
+        <button
+          type="button"
+          onClick={() => setListExpanded(!listExpanded)}
+          className="w-full text-xs font-bold text-accent hover:text-accent-dark py-2.5 rounded-xl border border-border bg-card hover:border-accent/50 active:scale-[0.98] transition-all"
+        >
+          {listExpanded ? "折りたたむ" : `全 ${episodes.length} 話を表示`}
+        </button>
+      )}
     </div>
   );
 }

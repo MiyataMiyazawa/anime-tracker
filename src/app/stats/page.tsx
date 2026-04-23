@@ -13,6 +13,8 @@ export default function StatsPage() {
 
   const totalWatched = allAnime.filter((a) => a.status === "completed").length;
   const totalWatching = allAnime.filter((a) => a.status === "watching").length;
+  const totalPlanned = allAnime.filter((a) => a.status === "planned").length;
+  const totalDropped = allAnime.filter((a) => a.status === "dropped").length;
   const totalEpisodes = allAnime.reduce((s, a) => s + a.watchedEpisodes, 0);
   const totalMinutes = allAnime.reduce(
     (s, a) => s + a.watchedEpisodes * a.episodeDuration,
@@ -118,6 +120,8 @@ export default function StatsPage() {
           <div className="grid grid-cols-2 gap-3">
             {statCard("完了作品", totalWatched)}
             {statCard("視聴中", totalWatching)}
+            {statCard("予定", totalPlanned)}
+            {statCard("中断", totalDropped)}
           </div>
 
           {/* Monthly charts */}

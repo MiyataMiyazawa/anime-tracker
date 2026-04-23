@@ -11,9 +11,10 @@ interface MonthSelectorProps {
   year: number;
   month: number;
   onChange: (year: number, month: number) => void;
+  monthsWithData?: Set<string>; // "YYYY-MM" format
 }
 
-export default function MonthSelector({ year, month, onChange }: MonthSelectorProps) {
+export default function MonthSelector({ year, month, onChange, monthsWithData }: MonthSelectorProps) {
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const selectedRef = useRef<HTMLButtonElement>(null);
@@ -116,19 +117,23 @@ export default function MonthSelector({ year, month, onChange }: MonthSelectorPr
                 {Array.from({ length: 12 }, (_, i) => {
                   const m = i + 1;
                   const isSelected = y === year && m === month;
+                  const hasData = monthsWithData?.has(`${y}-${String(m).padStart(2, "0")}`);
                   return (
                     <button
                       key={m}
                       ref={isSelected ? selectedRef : undefined}
                       type="button"
                       onClick={() => pick(y, m)}
-                      className={`text-xs font-medium py-2 rounded-xl border transition-all active:scale-95 ${
+                      className={`text-xs font-medium py-2 rounded-xl border transition-all active:scale-95 flex flex-col items-center gap-0.5 ${
                         isSelected
                           ? "border-accent bg-accent text-white shadow-soft"
                           : "border-border bg-card text-muted-dark hover:border-accent/50 hover:text-foreground"
                       }`}
                     >
                       {m}月
+                      {hasData && (
+                        <span className={`w-1 h-1 rounded-full ${isSelected ? "bg-white" : "bg-accent"}`} />
+                      )}
                     </button>
                   );
                 })}

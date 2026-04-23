@@ -63,6 +63,7 @@ function CardImage({ anime }: { anime: Anime }) {
 
 export default function CollectionPage() {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   const animeList = useLiveQuery(async () => {
     const all = await db.anime.toArray();
@@ -75,10 +76,13 @@ export default function CollectionPage() {
     });
   }, []);
 
+  const query = search.trim().toLowerCase();
   const filtered = animeList
-    ? statusFilter
-      ? animeList.filter((a) => a.status === statusFilter)
-      : animeList
+    ? animeList.filter((a) => {
+        if (statusFilter && a.status !== statusFilter) return false;
+        if (query && !a.title.toLowerCase().includes(query)) return false;
+        return true;
+      })
     : null;
 
   return (
@@ -86,6 +90,35 @@ export default function CollectionPage() {
       <div className="pt-1">
         <p className="label-eyebrow">collection</p>
         <h1 className="text-3xl font-black tracking-tight mt-1">コレクション</h1>
+      </div>
+
+      {/* Search bar */}
+      <div className="relative">
+        <svg
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none"
+          width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 10.5A6.5 6.5 0 1110.5 4a6.5 6.5 0 016.5 6.5z" />
+        </svg>
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="タイトル検索"
+          className="w-full bg-card border border-border rounded-xl pl-9 pr-9 py-2.5 text-sm shadow-card focus:outline-none focus:border-accent focus:shadow-card-hover transition-all"
+        />
+        {search && (
+          <button
+            type="button"
+            onClick={() => setSearch("")}
+            aria-label="検索をクリア"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-foreground p-1"
+          >
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* Status filter */}

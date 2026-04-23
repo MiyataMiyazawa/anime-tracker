@@ -44,6 +44,7 @@ export default function AnimeEditPage({
       await syncEpisodes(animeId, data.totalEpisodes);
       // クラウドに同期
       await syncAnime(animeId);
+      sessionStorage.setItem("toast", "変更を保存しました");
       router.push(`/anime/${id}`);
     } finally {
       setSubmitting(false);

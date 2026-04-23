@@ -42,6 +42,18 @@ export default function HomePage() {
   const isSearching = query.length > 0;
   const isFiltering = isSearching || tagFilter !== null || statusFilter !== null || showAll;
 
+  // データがある年月の一覧
+  const monthsWithData = useLiveQuery(async () => {
+    const all = await db.anime.toArray();
+    const set = new Set<string>();
+    for (const a of all) {
+      if (a.year != null && a.month != null) {
+        set.add(`${a.year}-${String(a.month).padStart(2, "0")}`);
+      }
+    }
+    return set;
+  }, []);
+
   // 全タグ一覧（頻度順）
   const allTags = useLiveQuery(async () => {
     const all = await db.anime.toArray();
@@ -295,6 +307,7 @@ export default function HomePage() {
             setYear(y);
             setMonth(m);
           }}
+          monthsWithData={monthsWithData}
         />
       )}
 
