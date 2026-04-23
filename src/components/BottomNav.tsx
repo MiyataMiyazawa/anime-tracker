@@ -14,34 +14,33 @@ export default function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card/80 backdrop-blur-xl border-t border-border z-50" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
-      <div className="flex justify-around items-center h-16 max-w-lg mx-auto px-2">
-        {navItems.map((item) => {
-          const isActive =
-            pathname === item.href ||
-            (item.href !== "/" && pathname.startsWith(item.href));
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`relative flex flex-col items-center justify-center gap-0.5 px-5 py-2 rounded-2xl transition-all active:scale-90 ${
-                isActive
-                  ? "text-accent"
-                  : "text-muted hover:text-foreground"
-              }`}
-            >
-              {isActive && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-brand rounded-full" />
-              )}
-              <item.icon active={isActive} />
-              <span className={`text-[10px] tracking-tight ${isActive ? "font-bold" : "font-medium"}`}>
-                {item.label}
-              </span>
-            </Link>
-          );
-        })}
-      </div>
-    </nav>
+    <div className="fixed bottom-0 left-0 right-0 z-50 px-4" style={{ paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom, 0px))" }}>
+      <nav className="max-w-lg mx-auto bg-card/70 backdrop-blur-2xl border border-border/50 rounded-3xl shadow-lg">
+        <div className="flex justify-around items-center h-14 px-2">
+          {navItems.map((item) => {
+            const isActive =
+              pathname === item.href ||
+              (item.href !== "/" && pathname.startsWith(item.href));
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`relative flex flex-col items-center justify-center gap-0.5 px-5 py-1.5 rounded-2xl transition-all active:scale-90 ${
+                  isActive
+                    ? "text-accent"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                <item.icon active={isActive} />
+                <span className={`text-[10px] tracking-tight ${isActive ? "font-bold" : "font-medium"}`}>
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+    </div>
   );
 }
 
