@@ -31,6 +31,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -43,7 +44,7 @@ export default function RootLayout({
       lang="ja"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col pb-20">
+      <body className="min-h-full flex flex-col" style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}>
         <AuthProvider>
           <ToastProvider />
           <main className="flex-1 max-w-lg mx-auto w-full px-4 py-6">
