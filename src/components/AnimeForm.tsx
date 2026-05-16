@@ -4,6 +4,8 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
 import type { Anime } from "@/lib/db";
+import type { AniListResult, AniListSearchResponse } from "@/lib/anilist";
+import { seasonToMonth } from "@/lib/anilist";
 
 type AnimeFormData = Omit<Anime, "id" | "createdAt" | "updatedAt">;
 
@@ -49,6 +51,12 @@ export default function AnimeForm({ initial, onSubmit, onDelete, submitting }: A
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [anilistQuery, setAnilistQuery] = useState("");
+  const [anilistResults, setAnilistResults] = useState<AniListResult[]>([]);
+  const [anilistLoading, setAnilistLoading] = useState(false);
+  const [anilistError, setAnilistError] = useState<string | null>(null);
+  const [showAnilistResults, setShowAnilistResults] = useState(false);
+  const anilistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const submittedRef = useRef(false);
 
@@ -162,6 +170,103 @@ export default function AnimeForm({ initial, onSubmit, onDelete, submitting }: A
       );
     };
     img.src = url;
+  };
+
+  const searchAnilist = async (query: string) => {
+    if (!query.trim()) {
+      setAnilistResults([]);
+      setShowAnilistResults(false);
+      return;
+    }
+    setAnilistLoading(true);
+    setAnilistError(null);
+    try {
+      const res = await fetch(`/api/anilist-search?q=${encodeURIComponent(query.trim())}`);
+      const data = (await res.json()) as AniListSearchResponse;
+      if (!res.ok) {
+        setAnilistError(data.error ?? "検索に失敗しました");
+        setAnilistResults([]);
+      } else {
+        setAnilistResults(data.results);
+        setShowAnilistResults(data.results.length > 0);
+      }
+    } catch {
+      setAnilistError("ネットワークエラーが発生しました");
+      setAnilistResults([]);
+    } finally {
+      setAnilistLoading(false);
+    }
+  };
+
+  const handleAnilistQueryChange = (value: string) => {
+    setAnilistQuery(value);
+    if (anilistTimerRef.current) clearTimeout(anilistTimerRef.current);
+    if (!value.trim()) {
+      setAnilistResults([]);
+      setShowAnilistResults(false);
+      return;
+    }
+    anilistTimerRef.current = setTimeout(() => searchAnilist(value), 400);
+  };
+
+  const fetchAndSetCoverImage = async (url: string) => {
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const img = new Image();
+      const objUrl = URL.createObjectURL(blob);
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const maxSize = 400;
+        let { width, height } = img;
+        if (width > maxSize || height > maxSize) {
+          if (width > height) {
+            height = (height / width) * maxSize;
+            width = maxSize;
+          } else {
+            width = (width / height) * maxSize;
+            height = maxSize;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (b) => {
+            if (b) setImageBlob(b);
+            URL.revokeObjectURL(objUrl);
+          },
+          "image/webp",
+          0.8
+        );
+      };
+      img.src = objUrl;
+    } catch {
+      // カバー画像取得失敗は無視
+    }
+  };
+
+  const selectAnilistResult = (result: AniListResult) => {
+    // タイトル: native → romaji → english
+    const t = result.title.native || result.title.romaji || result.title.english || "";
+    setTitle(t);
+
+    if (result.episodes) setTotalEpisodes(String(result.episodes));
+    if (result.duration) setEpisodeDuration(String(result.duration));
+
+    if (result.seasonYear) {
+      setYear(String(result.seasonYear));
+      setMonth(seasonToMonth(result.season));
+      setUnknownDate(false);
+    }
+
+    if (result.coverImage?.large) {
+      fetchAndSetCoverImage(result.coverImage.large);
+    }
+
+    setShowAnilistResults(false);
+    setAnilistQuery("");
   };
 
   const fetchAnimeInfo = async () => {
@@ -280,6 +385,58 @@ export default function AnimeForm({ initial, onSubmit, onDelete, submitting }: A
           className={inputClass}
           required
         />
+        {/* AniList Search */}
+        <div className="relative mt-2">
+          <div className="relative">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+            <input
+              type="text"
+              value={anilistQuery}
+              onChange={(e) => handleAnilistQueryChange(e.target.value)}
+              onBlur={() => setTimeout(() => setShowAnilistResults(false), 200)}
+              onFocus={() => { if (anilistResults.length > 0) setShowAnilistResults(true); }}
+              placeholder="AniListで検索..."
+              className={inputClass + " pl-9"}
+            />
+            {anilistLoading && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 inline-block w-3.5 h-3.5 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
+            )}
+          </div>
+          {anilistError && (
+            <p className="text-xs text-danger mt-1">{anilistError}</p>
+          )}
+          {showAnilistResults && anilistResults.length > 0 && (
+            <div className="absolute z-50 left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-lg max-h-72 overflow-y-auto">
+              {anilistResults.map((r) => (
+                <button
+                  key={r.id}
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => selectAnilistResult(r)}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-accent-tint text-left transition-colors border-b border-border/50 last:border-b-0"
+                >
+                  {r.coverImage?.large && (
+                    <img src={r.coverImage.large} alt="" className="w-10 h-14 object-cover rounded-md flex-shrink-0" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{r.title.native || r.title.romaji || r.title.english}</p>
+                    <p className="text-xs text-muted truncate">
+                      {r.title.romaji && r.title.native ? r.title.romaji : r.title.english || ""}
+                    </p>
+                    <p className="text-[10px] text-muted-dark mt-0.5">
+                      {r.format && <span className="mr-2">{r.format}</span>}
+                      {r.episodes && <span className="mr-2">{r.episodes}話</span>}
+                      {r.seasonYear && <span>{r.seasonYear}{r.season ? ` ${r.season}` : ""}</span>}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         <button
           type="button"
           onClick={fetchAnimeInfo}
