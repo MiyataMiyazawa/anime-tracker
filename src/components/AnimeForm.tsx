@@ -211,7 +211,7 @@ export default function AnimeForm({ initial, onSubmit, onDelete, submitting }: A
 
   const fetchAndSetCoverImage = async (url: string) => {
     try {
-      const res = await fetch(url);
+      const res = await fetch(`/api/proxy-image?url=${encodeURIComponent(url)}`);
       const blob = await res.blob();
       const img = new Image();
       const objUrl = URL.createObjectURL(blob);
