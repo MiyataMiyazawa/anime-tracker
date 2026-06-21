@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import BottomNav from "@/components/BottomNav";
 import { AuthProvider } from "@/components/AuthProvider";
 import ToastProvider from "@/components/ToastProvider";
+import SplashScreen from "@/components/SplashScreen";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -45,6 +46,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col" style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}>
+        <SplashScreen />
         <AuthProvider>
           <ToastProvider />
           <main className="flex-1 max-w-lg mx-auto w-full px-4 pb-6" style={{ paddingTop: "calc(1.5rem + env(safe-area-inset-top, 0px))" }}>
