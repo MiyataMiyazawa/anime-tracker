@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useState } from "react";
 
 /**
@@ -45,20 +44,7 @@ export default function SplashScreen() {
           "radial-gradient(ellipse 70% 50% at 50% 32%, rgba(249, 115, 22, 0.12), transparent 60%), var(--background)",
       }}
     >
-      <div className="splash-pop flex flex-col items-center gap-5">
-        <Image
-          src="/icons/icon-192.png"
-          alt=""
-          width={96}
-          height={96}
-          priority
-          className="rounded-[1.75rem] shadow-hero"
-        />
-        <div className="flex flex-col items-center gap-1.5">
-          <h1 className="brand-text text-3xl font-bold">Anime Tracker</h1>
-          <p className="label-eyebrow">アニメ視聴記録</p>
-        </div>
-      </div>
+      <h1 className="splash-pop brand-text text-4xl font-bold">Anime Tracker</h1>
     </div>
   );
 }
